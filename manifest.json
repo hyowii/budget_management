@@ -1,0 +1,13 @@
+{
+  "name": "Hy Owii - Quản lý chi tiêu",
+  "short_name": "Hy Owii",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff9fc",
+  "theme_color": "#dd6d9f",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
