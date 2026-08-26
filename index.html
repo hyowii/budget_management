@@ -122,13 +122,26 @@
 .trip-day-head b{font-size:16px;font-weight:700;color:#b94f7f}
 .trip-day-head input{height:37px;padding:0 10px;border:1px solid var(--line);border-radius:8px;outline:0;background:#fff;font-size:14px}
 .trip-day-head .row-delete{margin-left:auto}
-.trip-day-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:12px}
+.trip-day-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
 .trip-day-fields label{display:flex;flex-direction:column;gap:5px;color:#9a8792;font-size:12.5px;font-weight:700}
 .trip-day-fields input{height:37px;padding:0 10px;border:1px solid var(--line);border-radius:8px;outline:0;background:#fff;font-size:14px;font-weight:400;color:var(--ink)}
+.trip-location-card{padding:14px;margin-bottom:12px;border:1px solid #ecd6e0;border-radius:12px;background:#fff}
+.trip-location-head{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.trip-location-head b{font-size:15px;font-weight:700;color:#b94f7f}
+.trip-location-head .row-delete{margin-left:auto}
+.trip-location-fields{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:9px;margin-bottom:12px}
+.trip-location-fields label{display:flex;flex-direction:column;gap:5px;color:#9a8792;font-size:12.5px;font-weight:700}
+.trip-location-fields input{height:37px;padding:0 10px;border:1px solid var(--line);border-radius:8px;outline:0;background:#fff;font-size:14px;font-weight:400;color:var(--ink)}
+.trip-location-value{display:flex;gap:7px}
+.trip-location-value input{flex:1;min-width:0}
+.trip-location-value input.is-link{color:#b8507f;text-decoration:underline}
+.trip-location-value .map-open-btn{flex:none;height:37px;width:37px;display:grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:8px;background:#fff8fb;color:#b94f7f;font-size:16px}
+.trip-location-value .map-open-btn:hover{background:#fde8f1}
+.trip-location-value .map-open-btn:disabled{opacity:.4;cursor:default}
 .trip-activities{padding-top:10px;border-top:1px dashed #ecd6e0}
-.trip-activity-row{display:grid;grid-template-columns:110px 1fr auto;gap:8px;margin-bottom:8px}
+.trip-activity-row{display:grid;grid-template-columns:100px 1fr 1fr auto;gap:8px;margin-bottom:8px}
 .trip-activity-row input{height:36px;padding:0 10px;border:1px solid var(--line);border-radius:8px;outline:0;background:#fff;font-size:14px}
-@media(max-width:640px){.trip-setup-grid,.trip-day-fields{grid-template-columns:1fr}.trip-member-row{grid-template-columns:1fr}.trip-budget-row{grid-template-columns:1fr}.trip-checklist-add{grid-template-columns:1fr}
+@media(max-width:640px){.trip-setup-grid,.trip-day-fields,.trip-location-fields{grid-template-columns:1fr}.trip-activity-row{grid-template-columns:1fr}.trip-member-row{grid-template-columns:1fr}.trip-budget-row{grid-template-columns:1fr}.trip-checklist-add{grid-template-columns:1fr}
 .tb-head-items{display:none}
 .tb-item-row{grid-template-columns:1fr 1fr;grid-template-areas:"cat cat" "planned actual" "note note";row-gap:8px;column-gap:10px;padding:12px;border:1px solid #f0dce5;border-radius:12px;background:#fff8fb;position:relative}
 .tb-item-row .row-delete{position:absolute;top:8px;right:8px}
@@ -2445,8 +2458,26 @@ function renderTripChecklistTab(fund,p){
     </div>`).join(''):'<div class="empty-state">Chưa có việc cần chuẩn bị, thêm ở trên nhé</div>'}
   </article>`;
 }
+function tripLocationMapUrl(value){
+  const v=(value||'').trim();
+  if(!v)return '';
+  if(/^https?:\/\//i.test(v))return v;
+  return 'https://www.google.com/maps/search/'+encodeURIComponent(v);
+}
+function tripLocationIsLink(value){
+  return /^https?:\/\//i.test((value||'').trim());
+}
+function ensureDayLocations(d){
+  if(!d.locations||!d.locations.length){
+    const seedActivities=(d.activities||[]).map(a=>({id:a.id||uid(),time:a.time||'',activity:a.activity||'',note:a.note||''}));
+    d.locations=[{id:uid(),name:'',value:d.location||'',transport:d.transport||'',activities:seedActivities}];
+  }
+  d.locations.forEach(loc=>{if(!loc.activities)loc.activities=[]});
+  return d;
+}
 function renderTripItineraryTab(fund,p){
   const canAutoGen=p.startDate&&p.endDate&&tripDateRangeList(p.startDate,p.endDate).length>0;
+  p.itineraryDays.forEach(ensureDayLocations);
   return `<article class="panel trip-panel">
     <h2>Lịch trình từng ngày</h2>
     <div class="trip-itinerary-toolbar">
@@ -2459,19 +2490,35 @@ function renderTripItineraryTab(fund,p){
         <input type="date" data-trip-day-field="date" value="${esc(d.date||'')}">
         <button type="button" class="row-delete" data-trip-day-del="${d.id}" title="Xóa ngày">×</button>
       </div>
-      <div class="trip-day-fields">
-        <label>Địa điểm<input data-trip-day-field="location" value="${esc(d.location||'')}" placeholder="VD: Bãi Sau"></label>
+      <div class="trip-day-fields" style="grid-template-columns:1fr">
         <label>Chỗ ở<input data-trip-day-field="accommodation" value="${esc(d.accommodation||'')}" placeholder="VD: Khách sạn ABC"></label>
-        <label>Phương tiện<input data-trip-day-field="transport" value="${esc(d.transport||'')}" placeholder="VD: Xe máy"></label>
       </div>
-      <div class="trip-activities">
-        ${d.activities.map(a=>`<div class="trip-activity-row" data-trip-activity="${a.id}">
-          <input type="time" data-trip-activity-field="time" value="${esc(a.time||'')}">
-          <input data-trip-activity-field="activity" value="${esc(a.activity||'')}" placeholder="Hoạt động...">
-          <button type="button" class="row-delete" data-trip-activity-del="${a.id}" title="Xóa">×</button>
-        </div>`).join('')}
-        <button type="button" class="link-button" data-trip-add-activity="${d.id}">＋ Thêm hoạt động</button>
-      </div>
+      ${d.locations.map((loc,li)=>`<div class="trip-location-card" data-trip-location="${loc.id}">
+        <div class="trip-location-head">
+          <b>Địa điểm ${li+1}</b>
+          <button type="button" class="row-delete" data-trip-location-del="${loc.id}" title="Xóa địa điểm">×</button>
+        </div>
+        <div class="trip-location-fields">
+          <label>Tên<input data-trip-location-field="name" value="${esc(loc.name||'')}" placeholder="VD: Bãi Sau"></label>
+          <label>Vị trí (dán được link Google Maps)
+            <div class="trip-location-value">
+              <input data-trip-location-field="value" value="${esc(loc.value||'')}" class="${tripLocationIsLink(loc.value)?'is-link':''}" placeholder="Địa chỉ hoặc dán link Google Maps">
+              <button type="button" class="map-open-btn" data-trip-location-open="${loc.id}" title="Mở bản đồ" ${loc.value&&loc.value.trim()?'':'disabled'}>📍</button>
+            </div>
+          </label>
+          <label>Phương tiện<input data-trip-location-field="transport" value="${esc(loc.transport||'')}" placeholder="VD: Xe máy"></label>
+        </div>
+        <div class="trip-activities">
+          ${loc.activities.map(a=>`<div class="trip-activity-row" data-trip-activity="${a.id}">
+            <input type="time" data-trip-activity-field="time" value="${esc(a.time||'')}">
+            <input data-trip-activity-field="activity" value="${esc(a.activity||'')}" placeholder="Hoạt động...">
+            <input data-trip-activity-field="note" value="${esc(a.note||'')}" placeholder="Ghi chú...">
+            <button type="button" class="row-delete" data-trip-activity-del="${a.id}" title="Xóa">×</button>
+          </div>`).join('')}
+          <button type="button" class="link-button" data-trip-add-activity="${loc.id}">＋ Thêm hoạt động</button>
+        </div>
+      </div>`).join('')}
+      <button type="button" class="link-button" data-trip-add-location="${d.id}">＋ Thêm địa điểm</button>
     </div>`).join(''):'<div class="empty-state">Chưa có ngày nào trong lịch trình, thêm ở trên nhé</div>'}
   </article>`;
 }
@@ -3219,7 +3266,7 @@ function bindTripTabContent(fund,p){
   }
   if(ui.tripPlanTab==='itinerary'){
     $('#tripAddDay').onclick=()=>{
-      p.itineraryDays.push({id:uid(),date:'',location:'',accommodation:'',transport:'',activities:[]});
+      p.itineraryDays.push({id:uid(),date:'',accommodation:'',locations:[{id:uid(),name:'',value:'',transport:'',activities:[]}]});
       saveTripPlan(p);
       rerenderTripTab(fund,p);
     };
@@ -3227,7 +3274,7 @@ function bindTripTabContent(fund,p){
       const dates=tripDateRangeList(p.startDate,p.endDate);
       if(!dates.length)return;
       if(p.itineraryDays.length&&!confirm('Thao tác này sẽ tạo lại toàn bộ lịch trình theo khoảng ngày đã chọn, các ngày hiện có sẽ bị thay thế. Tiếp tục?'))return;
-      p.itineraryDays=dates.map(date=>({id:uid(),date,location:'',accommodation:'',transport:'',activities:[]}));
+      p.itineraryDays=dates.map(date=>({id:uid(),date,accommodation:'',locations:[{id:uid(),name:'',value:'',transport:'',activities:[]}]}));
       saveTripPlan(p);
       rerenderTripTab(fund,p);
     };
@@ -3237,9 +3284,18 @@ function bindTripTabContent(fund,p){
       rerenderTripTab(fund,p);
     });
     $$('[data-trip-add-activity]').forEach(b=>b.onclick=()=>{
-      const d=p.itineraryDays.find(x=>x.id===b.dataset.tripAddActivity);
+      let loc=null;
+      for(const d of p.itineraryDays){loc=(d.locations||[]).find(x=>x.id===b.dataset.tripAddActivity);if(loc)break}
+      if(!loc)return;
+      loc.activities.push({id:uid(),time:'',activity:'',note:''});
+      saveTripPlan(p);
+      rerenderTripTab(fund,p);
+    });
+    $$('[data-trip-add-location]').forEach(b=>b.onclick=()=>{
+      const d=p.itineraryDays.find(x=>x.id===b.dataset.tripAddLocation);
       if(!d)return;
-      d.activities.push({id:uid(),time:'',activity:''});
+      ensureDayLocations(d);
+      d.locations.push({id:uid(),name:'',value:'',transport:'',activities:[]});
       saveTripPlan(p);
       rerenderTripTab(fund,p);
     });
@@ -3249,16 +3305,50 @@ function bindTripTabContent(fund,p){
         if(d){d[inp.dataset.tripDayField]=inp.value;saveTripPlan(p)}
       });
     });
+    $$('[data-trip-location]').forEach(card=>{
+      $$('[data-trip-location-field]',card).forEach(inp=>inp.onchange=()=>{
+        for(const d of p.itineraryDays){
+          const loc=(d.locations||[]).find(x=>x.id===card.dataset.tripLocation);
+          if(loc){
+            loc[inp.dataset.tripLocationField]=inp.value;
+            if(inp.dataset.tripLocationField==='value'){
+              inp.classList.toggle('is-link',tripLocationIsLink(inp.value));
+              const openBtn=card.querySelector('[data-trip-location-open]');
+              if(openBtn)openBtn.disabled=!inp.value.trim();
+            }
+            saveTripPlan(p);
+            break;
+          }
+        }
+      });
+    });
+    $$('[data-trip-location-open]').forEach(b=>b.onclick=()=>{
+      for(const d of p.itineraryDays){
+        const loc=(d.locations||[]).find(x=>x.id===b.dataset.tripLocationOpen);
+        if(loc){
+          const url=tripLocationMapUrl(loc.value);
+          if(url)window.open(url,'_blank','noopener');
+          break;
+        }
+      }
+    });
+    $$('[data-trip-location-del]').forEach(b=>b.onclick=()=>{
+      p.itineraryDays.forEach(d=>{if(d.locations)d.locations=d.locations.filter(x=>x.id!==b.dataset.tripLocationDel)});
+      saveTripPlan(p);
+      rerenderTripTab(fund,p);
+    });
     $$('[data-trip-activity]').forEach(row=>{
       $$('[data-trip-activity-field]',row).forEach(inp=>inp.onchange=()=>{
-        for(const d of p.itineraryDays){
-          const a=d.activities.find(x=>x.id===row.dataset.tripActivity);
-          if(a){a[inp.dataset.tripActivityField]=inp.value;saveTripPlan(p);break}
+        outer: for(const d of p.itineraryDays){
+          for(const loc of (d.locations||[])){
+            const a=loc.activities.find(x=>x.id===row.dataset.tripActivity);
+            if(a){a[inp.dataset.tripActivityField]=inp.value;saveTripPlan(p);break outer}
+          }
         }
       });
     });
     $$('[data-trip-activity-del]').forEach(b=>b.onclick=()=>{
-      p.itineraryDays.forEach(d=>{d.activities=d.activities.filter(x=>x.id!==b.dataset.tripActivityDel)});
+      p.itineraryDays.forEach(d=>{(d.locations||[]).forEach(loc=>{loc.activities=loc.activities.filter(x=>x.id!==b.dataset.tripActivityDel)})});
       saveTripPlan(p);
       rerenderTripTab(fund,p);
     });
