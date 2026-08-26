@@ -52,6 +52,8 @@
 .trip-member-row{display:grid;grid-template-columns:1fr 1fr auto;gap:9px;margin-bottom:9px}
 .trip-member-row input{width:100%;min-width:0;box-sizing:border-box;height:39px;padding:0 12px;border:1px solid var(--line);border-radius:9px;outline:0;background:#fff;font-size:15px}
 .trip-member-row input:focus{border-color:#df7ba7;box-shadow:0 0 0 3px #dd6d9f18}
+.trip-member-owner-badge{display:flex;align-items:center;justify-content:center;height:39px;padding:0 12px;border-radius:9px;background:#fde3ee;color:#b94f7f;font-size:13px;font-weight:800;white-space:nowrap}
+.trip-member-row-owner input{background:#fff8fb}
 .link-button{border:0;background:transparent;color:#b94f7f;font-size:14px;font-weight:700;padding:0}
 .link-button:hover{text-decoration:underline}
 .row-delete{width:30px;height:30px;flex-shrink:0;border:0;border-radius:8px;background:transparent;color:#c79aab;font-size:16px}
@@ -61,6 +63,10 @@
 .trip-budget-row input{width:100%;min-width:0;box-sizing:border-box;height:39px;padding:0 10px;border:1px solid var(--line);border-radius:9px;outline:0;background:#fff;font-size:14.5px}
 .trip-budget-row input:focus{border-color:#df7ba7;box-shadow:0 0 0 3px #dd6d9f18}
 .trip-budget-head{color:#a28b97;font-size:12.5px;font-weight:800;letter-spacing:.04em;padding:0 2px}
+.tb-field{min-width:0}
+.tb-label{display:none}
+.tb-total-cell{display:flex;flex-direction:column;gap:2px}
+.tb-total-cell .tb-label{display:block;font-size:11px;font-weight:700;color:#a28b97;letter-spacing:.02em}
 .trip-budget-total{padding:10px 2px 0;border-top:1px solid #f0dce5;margin-top:4px;font-weight:800;color:#453940}.trip-budget-split{padding:8px 2px 0;color:#b5507f;font-weight:700;font-size:14px}.split-mode-toggle{display:flex;gap:6px;padding:4px;border:1px solid #efdce5;border-radius:10px;background:#fff0f6}.split-mode-toggle button{height:32px;padding:0 14px;border:0;border-radius:7px;background:transparent;color:#8a7580;font-size:13.5px;font-weight:700}.split-mode-toggle button.active{color:#fff;background:#dd6d9f}
 .trip-budget-goal{margin:2px 0 18px;padding:14px 16px;border:1px solid #f0dce5;border-radius:13px;background:#fff8fb}
 .trip-budget-goal-row{display:grid;grid-template-columns:1.4fr 2fr auto;align-items:center;gap:12px}
@@ -122,7 +128,25 @@
 .trip-activities{padding-top:10px;border-top:1px dashed #ecd6e0}
 .trip-activity-row{display:grid;grid-template-columns:110px 1fr auto;gap:8px;margin-bottom:8px}
 .trip-activity-row input{height:36px;padding:0 10px;border:1px solid var(--line);border-radius:8px;outline:0;background:#fff;font-size:14px}
-@media(max-width:640px){.trip-setup-grid,.trip-day-fields{grid-template-columns:1fr}.trip-member-row{grid-template-columns:1fr}.trip-budget-row{grid-template-columns:1fr}.trip-checklist-add{grid-template-columns:1fr}}
+@media(max-width:640px){.trip-setup-grid,.trip-day-fields{grid-template-columns:1fr}.trip-member-row{grid-template-columns:1fr}.trip-budget-row{grid-template-columns:1fr}.trip-checklist-add{grid-template-columns:1fr}
+.tb-head-items{display:none}
+.tb-item-row{grid-template-columns:1fr 1fr;grid-template-areas:"cat cat" "planned actual" "note note";row-gap:8px;column-gap:10px;padding:12px;border:1px solid #f0dce5;border-radius:12px;background:#fff8fb;position:relative}
+.tb-item-row .row-delete{position:absolute;top:8px;right:8px}
+.tb-item-row .tb-field-cat{grid-area:cat;padding-right:34px}
+.tb-item-row .tb-field-planned{grid-area:planned}
+.tb-item-row .tb-field-actual{grid-area:actual}
+.tb-item-row .tb-field-note{grid-area:note}
+.tb-label{display:block;margin-bottom:4px;font-size:11.5px;font-weight:700;color:#a28b97;letter-spacing:.02em}
+.tb-field-planned .tb-label{color:#8a7580}
+.tb-field-actual .tb-label{color:#b94f7f}
+.trip-budget-total{display:flex;flex-wrap:wrap;gap:10px 16px;padding:12px 2px 0}
+.trip-budget-total>.tb-total-label{width:100%;font-size:13.5px}
+.trip-budget-goal-row{grid-template-columns:1fr auto!important;grid-template-areas:"label pct" "bar bar";row-gap:8px;column-gap:10px}
+.trip-budget-goal-row .trip-budget-goal-label{grid-area:label}
+.trip-budget-goal-row .fund-progress-track{grid-area:bar}
+.trip-budget-goal-row .trip-budget-goal-pct{grid-area:pct}
+.trip-budget-goal-label{font-size:15px}
+.trip-budget-goal-label b{font-size:16px}}
 .link-button{border:0;background:transparent;color:#b94f7f;font-size:13px;font-weight:700;text-decoration:underline;padding:0}
 .fund-history-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.fund-history-controls input,.fund-history-controls select,.fund-history-controls button{height:37px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:13px}.fund-history-controls input{flex:1;min-width:140px}.fund-history-controls button{font-weight:700;color:#8a7580;cursor:pointer}
 .fund-history-row{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:12px;padding:11px 6px;border-top:1px solid #f3e3ea}.fund-history-row:first-child{border-top:0}.fh-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;font-size:15px}.fh-main b{display:block;font-size:13.5px;font-weight:700}.fh-main small{display:block;margin-top:2px;color:#9a8792;font-size:12px}.fh-amount{font-size:13.5px;font-weight:800;white-space:nowrap}.fh-amount.pos{color:var(--green)}.fh-amount.neg{color:var(--red)}.fh-balance{color:#9a8792;font-size:12px;white-space:nowrap}.fh-actions{display:flex;gap:4px}.fh-actions button{width:26px;height:26px;border:0;border-radius:6px;background:#fff1f6;color:#b35780;font-size:12px}
@@ -1988,11 +2012,44 @@ function ensureTripPlan(fund){
     data.tripPlans.push(p);
     dbInsert('trip_plans',tripPlanInsertToDb(p));
   }
+  if(ensureOwnerMember(p))saveTripPlan(p);
   return p;
+}
+/* Luôn đảm bảo có 1 thành viên cố định đại diện cho người tạo quỹ ("Tôi"), không thể xóa.
+   Trả về true nếu vừa phải thêm mới (để gọi nơi dùng tự lưu lại). */
+function ensureOwnerMember(p){
+  if(!p.members)p.members=[];
+  if(p.members.some(m=>m.isOwner))return false;
+  p.members.unshift({id:'owner',name:'Tôi',phone:'',isOwner:true});
+  return true;
 }
 function saveTripPlan(p){dbUpdate('trip_plans',p.id,tripPlanToDb(p))}
 function tripBudgetTotals(p){
   return p.budgetItems.reduce((acc,b)=>({planned:acc.planned+(+b.planned||0),actual:acc.actual+(+b.actual||0)}),{planned:0,actual:0});
+}
+/* Tỷ lệ phần "Tôi" (người tạo quỹ) phải chịu trong 1 hạng mục: chia đều theo số người tham gia,
+   hoặc theo % đã tự nhập riêng nếu đang ở chế độ chia tự nhập (custom) */
+function tripOwnerMember(p){return p.members.find(m=>m.isOwner)||p.members[0]}
+function tripItemOwnerRatio(p,b,ownerId){
+  const participants=tripItemParticipants(p,b);
+  if(!ownerId||!participants.includes(ownerId))return 0;
+  if(b.splitType==='custom'){
+    const splitAmount=tripItemSplitAmount(b);
+    if(!splitAmount)return participants.length?1/participants.length:0;
+    return (+((b.shares&&b.shares[ownerId])||0))/splitAmount;
+  }
+  return participants.length?1/participants.length:0;
+}
+/* Tổng "Dự kiến"/"Thực tế" chỉ tính phần Tôi phải chi (không cộng dồn của tất cả mọi người) */
+function tripOwnerBudgetTotals(p){
+  const owner=tripOwnerMember(p);
+  const ownerId=owner&&owner.id;
+  return p.budgetItems.reduce((acc,b)=>{
+    const ratio=tripItemOwnerRatio(p,b,ownerId);
+    acc.planned+=(+b.planned||0)*ratio;
+    acc.actual+=(+b.actual||0)*ratio;
+    return acc;
+  },{planned:0,actual:0});
 }
 /* Số tiền dùng để chia cho 1 hạng mục: ưu tiên "Thực tế" đã chi, nếu chưa có thì tạm dùng "Dự kiến" */
 function tripItemSplitAmount(b){
@@ -2199,11 +2256,11 @@ function renderTripSetupTab(fund,p){
     </div>
     <div class="trip-members">
       <div class="trip-members-head"><b>Thành viên tham gia</b><button type="button" id="tripAddMember" class="link-button">＋ Thêm thành viên</button></div>
-      ${p.members.length?p.members.map(m=>`<div class="trip-member-row" data-trip-member="${m.id}">
+      ${p.members.map(m=>`<div class="trip-member-row${m.isOwner?' trip-member-row-owner':''}" data-trip-member="${m.id}">
         <input data-trip-member-field="name" value="${esc(m.name)}" placeholder="Tên thành viên">
         <input data-trip-member-field="phone" value="${esc(m.phone||'')}" placeholder="SĐT (nếu có)">
-        <button type="button" class="row-delete" data-trip-member-del="${m.id}" title="Xóa">×</button>
-      </div>`).join(''):'<div class="empty-state">Chưa có thành viên nào</div>'}
+        ${m.isOwner?'<span class="trip-member-owner-badge" title="Người tạo quỹ, luôn có mặt trong chuyến đi">🔒 Bạn</span>':`<button type="button" class="row-delete" data-trip-member-del="${m.id}" title="Xóa">×</button>`}
+      </div>`).join('')}
     </div>
   </article>`;
 }
@@ -2224,29 +2281,36 @@ function renderTripBudgetGoalCompare(fund,p,totals){
   </div>`;
   let note;
   if(overActual){
-    note=`⚠️ Đã chi thực tế <b>${money(totals.actual,fund.currency)}</b>, vượt mục tiêu quỹ <b>${money(totals.actual-target,fund.currency)}</b>.`;
+    note=`⚠️ Phần bạn đã chi thực tế <b>${money(totals.actual,fund.currency)}</b>, vượt mục tiêu quỹ <b>${money(totals.actual-target,fund.currency)}</b>.`;
   }else if(overPlanned){
-    note=`⚠️ Ngân sách dự kiến <b>${money(totals.planned,fund.currency)}</b> đang vượt mục tiêu quỹ <b>${money(totals.planned-target,fund.currency)}</b> (thực tế hiện vẫn trong hạn mức).`;
+    note=`⚠️ Phần bạn dự kiến chi <b>${money(totals.planned,fund.currency)}</b> đang vượt mục tiêu quỹ <b>${money(totals.planned-target,fund.currency)}</b> (thực tế hiện vẫn trong hạn mức).`;
   }else{
-    note=`✅ Ngân sách đang trong mục tiêu quỹ, còn dư <b>${money(target-Math.max(totals.planned,totals.actual),fund.currency)}</b>.`;
+    note=`✅ Phần bạn phải chi đang trong mục tiêu quỹ, còn dư <b>${money(target-Math.max(totals.planned,totals.actual),fund.currency)}</b>.`;
   }
   return `<div class="trip-budget-goal">
-    ${row('Dự kiến chi',totals.planned,pctPlanned,overPlanned)}
-    ${row('Thực tế đã chi',totals.actual,pctActual,overActual)}
+    ${row('Dự kiến chi (phần bạn)',totals.planned,pctPlanned,overPlanned)}
+    ${row('Thực tế đã chi (phần bạn)',totals.actual,pctActual,overActual)}
     <p class="trip-budget-goal-note ${(overPlanned||overActual)?'expense':'income'}">${note}</p>
   </div>`;
 }
 function renderTripBudgetTab(fund,p){
   const totals=tripBudgetTotals(p);
+  const ownerTotals=tripOwnerBudgetTotals(p);
   const diff=totals.planned-totals.actual;
   return `<article class="panel trip-panel">
     <h2>Ngân sách theo hạng mục</h2>
-    <p class="chart-sub">So sánh với số dư quỹ hiện tại: ${money(fund.current,fund.currency)} / mục tiêu ${money(fund.target,fund.currency)}</p>
-    ${renderTripBudgetGoalCompare(fund,p,totals)}
+    <p class="chart-sub">So sánh phần bạn phải chi với số dư quỹ hiện tại: ${money(fund.current,fund.currency)} / mục tiêu ${money(fund.target,fund.currency)}</p>
+    ${renderTripBudgetGoalCompare(fund,p,ownerTotals)}
     <div class="trip-budget-table">
-      <div class="trip-budget-row trip-budget-head"><span>Hạng mục</span><span>Dự kiến</span><span>Thực tế</span><span>Ghi chú</span><span></span></div>
+      <div class="trip-budget-row trip-budget-head tb-head-items"><span>Hạng mục</span><span>Dự kiến</span><span>Thực tế</span><span>Ghi chú</span><span></span></div>
       ${p.budgetItems.map(b=>renderTripBudgetItemBlock(fund,p,b)).join('')}
-      <div class="trip-budget-row trip-budget-total"><span>Tổng cộng</span><span>${money(totals.planned,fund.currency)}</span><span>${money(totals.actual,fund.currency)}</span><span class="${diff>=0?'income':'expense'}">${diff>=0?'Còn dư':'Vượt'} ${money(Math.abs(diff),fund.currency)}</span><span></span></div>
+      <div class="trip-budget-row trip-budget-total">
+        <span class="tb-total-label">Tổng cộng</span>
+        <span class="tb-total-cell"><span class="tb-label">Dự kiến</span>${money(totals.planned,fund.currency)}</span>
+        <span class="tb-total-cell"><span class="tb-label">Thực tế</span>${money(totals.actual,fund.currency)}</span>
+        <span class="tb-total-cell ${diff>=0?'income':'expense'}"><span class="tb-label">Chênh lệch</span>${diff>=0?'Còn dư':'Vượt'} ${money(Math.abs(diff),fund.currency)}</span>
+        <span></span>
+      </div>
     </div>
     <button type="button" id="tripAddBudgetItem" class="link-button" style="margin-top:10px">＋ Thêm hạng mục</button>
     ${p.members.length?renderTripContributionSummary(fund,p):'<p class="chart-sub" style="margin-top:14px">Thêm thành viên ở tab "Thông tin chuyến đi" để bắt đầu chia tiền theo từng hạng mục.</p>'}
@@ -2256,11 +2320,11 @@ function renderTripBudgetTab(fund,p){
    và từng người đã đóng lại bao nhiêu — thay vì gộp chung 1 bảng đóng góp tổng như trước. */
 function renderTripBudgetItemBlock(fund,p,b){
   return `<div data-trip-budget-block="${b.id}">
-    <div class="trip-budget-row" data-trip-budget="${b.id}">
-      <input data-trip-budget-field="category" value="${esc(b.category)}" placeholder="VD: Chỗ ở">
-      <input type="number" data-trip-budget-field="planned" value="${b.planned||0}">
-      <input type="number" data-trip-budget-field="actual" value="${b.actual||0}">
-      <input data-trip-budget-field="note" value="${esc(b.note||'')}" placeholder="Ghi chú">
+    <div class="trip-budget-row tb-item-row" data-trip-budget="${b.id}">
+      <div class="tb-field tb-field-cat"><span class="tb-label">Hạng mục</span><input data-trip-budget-field="category" value="${esc(b.category)}" placeholder="VD: Chỗ ở"></div>
+      <div class="tb-field tb-field-planned"><span class="tb-label">Dự kiến</span><input type="number" data-trip-budget-field="planned" value="${b.planned||0}"></div>
+      <div class="tb-field tb-field-actual"><span class="tb-label">Thực tế</span><input type="number" data-trip-budget-field="actual" value="${b.actual||0}"></div>
+      <div class="tb-field tb-field-note"><span class="tb-label">Ghi chú</span><input data-trip-budget-field="note" value="${esc(b.note||'')}" placeholder="Ghi chú"></div>
       <button type="button" class="row-delete" data-trip-budget-del="${b.id}" title="Xóa">×</button>
     </div>
     ${p.members.length?renderTripItemSplit(fund,p,b):''}
@@ -3025,6 +3089,8 @@ function bindTripTabContent(fund,p){
       rerenderTripTab(fund,p);
     };
     $$('[data-trip-member-del]').forEach(b=>b.onclick=()=>{
+      const target=p.members.find(m=>m.id===b.dataset.tripMemberDel);
+      if(target&&target.isOwner)return;
       p.members=p.members.filter(m=>m.id!==b.dataset.tripMemberDel);
       saveTripPlan(p);
       rerenderTripTab(fund,p);
