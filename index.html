@@ -168,8 +168,12 @@
 .trip-checklist-photo-add:hover{background:#fdeaf2}
 .trip-checklist-photo-add input{display:none}
 .trip-checklist-photo-hint{flex-basis:100%;color:#b39aa6;font-size:11.5px;margin-top:-2px}
+.trip-checklist-photo-pdf{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:22px;color:#b94f7f;background:#f8eef3}
+.trip-checklist-photo-pdf span{font-size:9px;font-weight:700;letter-spacing:.3px}
+.photo-view-pdf-link{display:inline-flex;align-items:center;gap:8px;padding:16px 22px;border-radius:12px;background:#fdeaf2;color:#c1548a;font-weight:700;text-decoration:none;font-size:14px}
 .photo-view-modal .modal{width:min(560px,100%);background:#0d0d0f;border:0;text-align:center;padding:0}
 .photo-view-modal .modal img{max-width:100%;max-height:80vh;display:block;margin:0 auto}
+.photo-view-modal .modal .photo-view-pdf-link{margin:60px auto}
 .photo-view-loading{padding:60px 20px;color:#e9c9d8;font-size:14px}
 .trip-itinerary-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
 .trip-day-card{padding:16px;margin-bottom:14px;border:1px solid #f0dce5;border-radius:14px;background:#fffafd}
@@ -2197,6 +2201,7 @@ async function getChecklistPhotoUrl(path){
 /* Gắn ảnh (đang tải hoặc đã có) vào từng ô ảnh trong checklist sau khi render xong HTML */
 function hydrateChecklistPhotoThumbs(root){
   $$('.trip-checklist-photo[data-photo-path]',root).forEach(async el=>{
+    if(el.classList.contains('is-pdf'))return;
     const path=el.dataset.photoPath;
     const img=el.querySelector('img');
     if(!img||img.dataset.loaded)return;
@@ -2656,9 +2661,13 @@ function renderTripChecklistTab(fund,p){
         </div>
         ${sec==='Giấy tờ'?`<div class="trip-checklist-detail-wrap"><span class="trip-checklist-detail-ic">🪪</span><input class="trip-checklist-detail" data-trip-check-detail="${c.id}" placeholder="Số giấy tờ, ngày hết hạn, nơi cất giữ..." value="${esc(c.detail||'')}"></div>
         <div class="trip-checklist-photos">
-          ${(c.photos||[]).map(path=>`<div class="trip-checklist-photo" data-photo-path="${esc(path)}" data-trip-check-photo-view="${c.id}"><img alt="Ảnh giấy tờ"><button type="button" class="trip-checklist-photo-del" data-trip-check-photo-del="${c.id}" data-photo-path="${esc(path)}" title="Xóa ảnh">×</button></div>`).join('')}
-          <label class="trip-checklist-photo-add" title="Chụp/thêm ảnh giấy tờ">📷<input type="file" accept="image/*" capture="environment" data-trip-check-photo-add="${c.id}"></label>
-          <span class="trip-checklist-photo-hint">Ảnh lưu riêng tư, chỉ xem được qua link tạm có hạn</span>
+          ${(c.photos||[]).map(path=>{
+            const isPdf=/\.pdf$/i.test(path);
+            const thumbInner=isPdf?'<div class="trip-checklist-photo-pdf">📄<span>PDF</span></div>':'<img alt="Ảnh giấy tờ">';
+            return `<div class="trip-checklist-photo${isPdf?' is-pdf':''}" data-photo-path="${esc(path)}" data-trip-check-photo-view="${c.id}">${thumbInner}<button type="button" class="trip-checklist-photo-del" data-trip-check-photo-del="${c.id}" data-photo-path="${esc(path)}" title="Xóa ảnh">×</button></div>`;
+          }).join('')}
+          <label class="trip-checklist-photo-add" title="Chụp/thêm ảnh hoặc PDF giấy tờ">📷<input type="file" accept="image/*,.pdf,application/pdf" data-trip-check-photo-add="${c.id}"></label>
+          <span class="trip-checklist-photo-hint">Ảnh/PDF lưu riêng tư, chỉ xem được qua link tạm có hạn</span>
         </div>`:''}
       </div>`).join('')}
     </div>`).join(''):'<div class="empty-state">Chưa có việc cần chuẩn bị, thêm ở trên nhé</div>'}
@@ -3512,12 +3521,16 @@ function bindTripTabContent(fund,p){
     });
     $$('[data-trip-check-photo-view]').forEach(el=>el.onclick=async()=>{
       const path=el.dataset.photoPath;
+      const isPdf=/\.pdf$/i.test(path);
       $('#photoViewModal').classList.add('open');
-      $('#photoViewBody').innerHTML='Đang tải ảnh...';
+      $('#photoViewBody').innerHTML=isPdf?'Đang tải PDF...':'Đang tải ảnh...';
       $('#photoViewBody').className='photo-view-loading';
       const url=await getChecklistPhotoUrl(path);
       $('#photoViewBody').className='';
-      $('#photoViewBody').innerHTML=url?`<img src="${esc(url)}" alt="Ảnh giấy tờ">`:'Không tải được ảnh, thử lại sau.';
+      if(!url){$('#photoViewBody').innerHTML='Không tải được, thử lại sau.';return}
+      $('#photoViewBody').innerHTML=isPdf
+        ?`<a href="${esc(url)}" target="_blank" rel="noopener" class="photo-view-pdf-link">📄 Mở file PDF trong tab mới</a>`
+        :`<img src="${esc(url)}" alt="Ảnh giấy tờ">`;
     });
     hydrateChecklistPhotoThumbs();
   }
