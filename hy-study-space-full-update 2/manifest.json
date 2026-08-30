@@ -1,0 +1,26 @@
+{
+  "name": "Hy Language Station",
+  "short_name": "Hy Station",
+  "description": "Học từ vựng, ngữ pháp và luyện tập ngôn ngữ — hoạt động cả khi offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFF9FC",
+  "theme_color": "#d4709a",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "https://pnqxiyhtpkwkqhrofiwl.supabase.co/storage/v1/object/public/app-icon/icon.PNG?v=6",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://pnqxiyhtpkwkqhrofiwl.supabase.co/storage/v1/object/public/app-icon/icon.PNG?v=6",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
