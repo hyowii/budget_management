@@ -1865,7 +1865,7 @@ function historySummaryHTML(list){
       <div class="tx-summary-cur">${cur}</div>
       <div class="tx-summary-row"><span>Tổng tiền vào</span><b class="income">+${money(s.income,cur)}</b></div>
       <div class="tx-summary-row"><span>Tổng tiền ra</span><b class="expense">−${money(s.expense,cur)}</b></div>
-      ${carrySums?`<div class="tx-summary-row"><span>Số dư tháng trước mang sang</span><b class="${carry>=0?'income':'expense'}">${carry>=0?'+':'−'}${money(Math.abs(carry),cur)}</b></div>`:''}
+      ${carrySums?`<div class="tx-summary-row"><span>Số dư tháng trước</span><b class="${carry>=0?'income':'expense'}">${carry>=0?'+':'−'}${money(Math.abs(carry),cur)}</b></div>`:''}
       <div class="tx-summary-row total"><span>Số dư ${carrySums?'lũy kế':'kỳ này'}</span><b class="${total>=0?'income':'expense'}">${total>=0?'+':'−'}${money(Math.abs(total),cur)}</b></div>
     </div>`;
   }).join('')}</div>`;
