@@ -1838,17 +1838,35 @@ function historySummaryByCurrency(list){
   });
   return sums;
 }
+// Tính số dư (thu-chi) của tháng liền trước tháng hiện tại, theo từng loại tiền.
+// Chỉ áp dụng khi đang xem theo "Tháng" để tự động cộng dồn số dư tháng trước vào tháng này.
+function prevMonthCarryOver(){
+  if(ui.period!=='month')return null;
+  const now=new Date();
+  const from=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const to=new Date(now.getFullYear(),now.getMonth(),1);
+  const list=data.transactions.filter(x=>{
+    const d=new Date(x.date);
+    return !isNaN(d)&&d>=from&&d<to&&(ui.currency==='ALL'||x.currency===ui.currency);
+  });
+  return historySummaryByCurrency(list);
+}
 function historySummaryHTML(list){
   const currencies=ui.currency==='ALL'?['VND','JPY']:[ui.currency];
   const sums=historySummaryByCurrency(list);
+  const carrySums=prevMonthCarryOver();
   return `<div class="tx-summary-grid">${currencies.map(cur=>{
     const s=sums[cur]||{income:0,expense:0};
     const balance=s.income-s.expense;
+    const c=carrySums?(carrySums[cur]||{income:0,expense:0}):null;
+    const carry=c?(c.income-c.expense):0;
+    const total=balance+carry;
     return `<div class="tx-summary-card">
       <div class="tx-summary-cur">${cur}</div>
       <div class="tx-summary-row"><span>Tổng tiền vào</span><b class="income">+${money(s.income,cur)}</b></div>
       <div class="tx-summary-row"><span>Tổng tiền ra</span><b class="expense">−${money(s.expense,cur)}</b></div>
-      <div class="tx-summary-row total"><span>Số dư kỳ này</span><b class="${balance>=0?'income':'expense'}">${balance>=0?'+':'−'}${money(Math.abs(balance),cur)}</b></div>
+      ${carrySums?`<div class="tx-summary-row"><span>Số dư tháng trước mang sang</span><b class="${carry>=0?'income':'expense'}">${carry>=0?'+':'−'}${money(Math.abs(carry),cur)}</b></div>`:''}
+      <div class="tx-summary-row total"><span>Số dư ${carrySums?'lũy kế':'kỳ này'}</span><b class="${total>=0?'income':'expense'}">${total>=0?'+':'−'}${money(Math.abs(total),cur)}</b></div>
     </div>`;
   }).join('')}</div>`;
 }
