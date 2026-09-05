@@ -152,6 +152,16 @@
 .trip-split-status.owing{color:#ca6884}
 .trip-split-status.pending{color:#a188a8;font-weight:600}
 @media(max-width:640px){.trip-split-row{grid-template-columns:1fr 1fr}.trip-split-settled{grid-column:span 1}}
+.trip-repay-entries{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;padding:9px 11px;border:1px dashed #ecd6e0;border-radius:10px;background:#fffbfd}
+.trip-repay-entry{display:grid;grid-template-columns:1fr 1fr 30px;align-items:center;gap:7px}
+.trip-repay-entry input{width:100%;box-sizing:border-box;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:7px;outline:0;background:#fff;font-size:12.5px}
+.trip-repay-entry input:focus{border-color:#de7da7;box-shadow:0 0 0 3px #db6f9f18}
+.trip-repay-entry input[type=date]{font-size:11.5px;padding:0 5px}
+.trip-repay-entry .row-delete{width:28px;height:28px;border:1px solid #f0dfe7;border-radius:7px;background:#fff;color:#987fa2}
+.trip-repay-entry .row-delete:hover{background:#fde7ef;color:#b65c7a}
+.trip-repay-add{align-self:flex-start;height:30px;padding:0 11px;border:1px dashed #db6f9f;border-radius:8px;background:transparent;color:#b7517f;font-size:12.5px;font-weight:700}
+.trip-repay-add:hover{background:#fde3ee}
+@media(max-width:640px){.trip-repay-entry{grid-template-columns:1fr 1fr 26px}}
 .trip-checklist-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .trip-checklist-progress{color:#a084a9;font-size:13.5px;font-weight:700}
 .trip-checklist-add{display:grid;grid-template-columns:150px 1fr auto;gap:9px;margin-bottom:20px}
@@ -329,6 +339,9 @@
 .chart-legend-item b{margin-left:auto;font-weight:800;color:#443549}
 .chart-legend-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px}
 .bar-chart-svg{width:100%;height:auto;display:block}
+.diff-hover-zone{cursor:pointer}
+.diff-tip{opacity:0;pointer-events:none;transition:opacity .12s}
+.diff-group:hover .diff-tip{opacity:1}
 .bar-chart-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px}
 .chart-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:12px}
 .chart-stat-card{padding:16px 18px;border:1px solid #f0dce5;border-radius:14px;background:#fff}
@@ -515,8 +528,9 @@
   <button class="primary-button" id="addTaskBtn" style="width:100%;height:46px">＋ Thêm việc</button>
 </div></div></div>
 <div class="modal-wrap" id="txModal"><div class="modal modal-narrow task-modal" style="width:min(560px,100%)"><header><div class="task-modal-title"><span class="task-modal-icon">◫</span><h2>Thêm giao dịch mới</h2></div><button id="closeTxModal">×</button></header><div class="task-modal-body">
-  <div class="task-modal-field"><label>Nhập nhanh tự do</label><textarea id="quickInput" rows="3" placeholder="Ví dụ: Netflix 220k; tiền tàu 2s; lương ¥210.000"></textarea></div>
-  <div class="chips"><span>k = 1.000 VND</span><span>tr = 1.000.000 VND</span><span>y / ¥ = Yên</span><span>s = 1.000 Yên</span><span>m = 10.000 Yên</span></div>
+  <div class="task-modal-field"><label>Nhập nhanh tự do</label><textarea id="quickInput" rows="3" placeholder="Ví dụ: 11h20 20/9 Chi 200k tiền ăn; 3/8 3:10 Chi 195k tiền YTB; Thu 33k Khánh Netflix"></textarea></div>
+  <div class="chips"><span>k = 1.000 VND</span><span>tr = 1.000.000 VND</span><span>y / ¥ = Yên</span><span>s = 1.000 Yên</span><span>m = 10.000 Yên</span><span>Thu / Chi = loại giao dịch</span><span>20/9 3h15 = ngày giờ</span></div>
+  <div style="display:flex;justify-content:flex-end;margin-top:2px"><button type="button" class="link-button" id="openQuickRuleModal">⚙ Quy tắc phân loại tự động</button></div>
   <div class="preview-list" id="quickPreview"></div>
   <div class="manual-add-divider">hoặc thêm thủ công, chọn danh mục rõ ràng</div>
   <div class="manual-add-grid">
@@ -531,6 +545,7 @@
   <div class="field-error" id="manualError"></div>
   <button class="primary-button" id="addManualBtn" style="width:100%;height:46px;margin-top:10px">＋ Thêm giao dịch</button>
 </div></div></div>
+<div class="modal-wrap" id="quickRuleModal"><div class="modal modal-narrow task-modal" style="width:min(560px,100%)"><header><div class="task-modal-title"><span class="task-modal-icon">⚙</span><h2>Quy tắc phân loại tự động</h2></div><button id="closeQuickRuleModal">×</button></header><div class="task-modal-body" id="quickRuleModalBody"></div></div></div>
 <div class="modal-wrap" id="recurModal"><div class="modal modal-narrow task-modal" style="width:min(560px,100%)"><header><div class="task-modal-title"><span class="task-modal-icon">🔁</span><h2 id="recurModalTitle">Thêm chi tiêu cố định</h2></div><button id="closeRecurModal">×</button></header><div class="task-modal-body">
   <input type="hidden" id="recurEditId" value="">
   <div class="task-modal-field"><label>Tên khoản chi</label><input id="recurTitle" placeholder="Ví dụ: Tiền thuê nhà, Internet, Bảo hiểm..."></div>
@@ -655,6 +670,7 @@ try{
 const HYOWII_ROW_KEY = 'hyowii-main'; // key cũ trong bảng key-value hyowii_store, chỉ dùng để tự chuyển đổi dữ liệu cũ 1 lần
 const HYOWII_PARTS = ['categories','transactions','tasks','notes','knowledge','funds','payroll','budgets']; // key cũ dạng "hyowii-<part>", cũng chỉ dùng để migrate
 const STORAGE_KEY = 'hyowii-sites-standalone-v1';
+const QUICK_RULES_KEY = 'hyowii-quick-rules-v1'; // quy tắc phân loại nhập nhanh, chỉ lưu ở máy (không đồng bộ server)
 </script>
 <script>
 /* ===================== TIỆN ÍCH CHUNG ===================== */
@@ -714,10 +730,15 @@ function tickCountdowns(){
 function debounce(fn,wait){let t=null;return(...args)=>{clearTimeout(t);t=setTimeout(()=>fn(...args),wait)}}
 const DEFAULT_CATEGORY_COLOR='#b890a6';
 const UNCATEGORIZED='Chưa phân loại';
-function categoryNames(){return data.categories.map(c=>c.name)}
+// Danh mục thu nhập mặc định (giữ nguyên tên cũ "Thu nhập" để tương thích các giao dịch đã lưu trước đây,
+// đóng vai trò như "Chưa phân loại" nhưng dành riêng cho thu nhập)
+const UNCATEGORIZED_INCOME='Thu nhập';
+// Loại của 1 danh mục: 'income' hoặc 'expense' (mặc định 'expense' nếu dữ liệu cũ chưa có trường type)
+function categoryType(c){return c&&c.type==='income'?'income':'expense'}
+function categoryNames(type){return data.categories.filter(c=>!type||categoryType(c)===type).map(c=>c.name)}
 function categoryById(id){return data.categories.find(c=>c.id===id)}
 function categoryByName(name){return data.categories.find(c=>c.name===name)}
-function rootCategories(){return data.categories.filter(c=>!c.parentId)}
+function rootCategories(type){return data.categories.filter(c=>!c.parentId&&(!type||categoryType(c)===type))}
 function childCategoriesOf(parentId){return data.categories.filter(c=>c.parentId===parentId)}
 function categoryHasChildren(id){return data.categories.some(c=>c.parentId===id)}
 function categoryColor(name){
@@ -735,10 +756,11 @@ function rootNameOf(name){
   const p=categoryById(c.parentId);
   return p?p.name:c.name;
 }
-// Danh sách danh mục theo thứ tự cây (cha rồi tới các con), kèm độ sâu để hiển thị thụt lề
-function categoryTreeList(){
+// Danh sách danh mục theo thứ tự cây (cha rồi tới các con), kèm độ sâu để hiển thị thụt lề.
+// type: lọc theo 'income' hoặc 'expense'; bỏ trống thì lấy tất cả.
+function categoryTreeList(type){
   const out=[];
-  rootCategories().forEach(r=>{
+  rootCategories(type).forEach(r=>{
     out.push({id:r.id,name:r.name,depth:0,hasChildren:categoryHasChildren(r.id)});
     childCategoriesOf(r.id).forEach(c=>out.push({id:c.id,name:c.name,depth:1,hasChildren:false}));
   });
@@ -820,12 +842,16 @@ const seed={
   tripPlans:[],
   recurringExpenses:[],
   categories:[
-    {id:uid(),name:'Giải trí',color:'#db6f9f'},
-    {id:uid(),name:'Hóa đơn',color:'#d9a252'},
-    {id:uid(),name:'Đi lại',color:'#8dadd3'},
-    {id:uid(),name:'Ăn uống',color:'#61987d'},
-    {id:uid(),name:'Khác',color:'#c7b3cd'},
-    {id:uid(),name:UNCATEGORIZED,color:DEFAULT_CATEGORY_COLOR}
+    {id:uid(),name:'Giải trí',color:'#db6f9f',type:'expense'},
+    {id:uid(),name:'Hóa đơn',color:'#d9a252',type:'expense'},
+    {id:uid(),name:'Đi lại',color:'#8dadd3',type:'expense'},
+    {id:uid(),name:'Ăn uống',color:'#61987d',type:'expense'},
+    {id:uid(),name:'Khác',color:'#c7b3cd',type:'expense'},
+    {id:uid(),name:UNCATEGORIZED,color:DEFAULT_CATEGORY_COLOR,type:'expense'},
+    {id:uid(),name:'Lương',color:'#61987d',type:'income'},
+    {id:uid(),name:'Thưởng',color:'#d9a252',type:'income'},
+    {id:uid(),name:'Đầu tư',color:'#8dadd3',type:'income'},
+    {id:uid(),name:UNCATEGORIZED_INCOME,color:DEFAULT_CATEGORY_COLOR,type:'income'}
   ],
   payroll:{base:0,otHourly:0,otRegularHours:0,otHolidayHours:0,otNightHours:0,allowance:0,health:4.72,pension:9.15,employment:.5,tax:2.3,resident:0,rate:164.05},
   budgets:{VND:{total:0,categories:{}},JPY:{total:0,categories:{}}}
@@ -835,15 +861,22 @@ function withDefaultsBudgetCurrency(src){
 }
 function withDefaultsCategories(src){
   const list=Array.isArray(src)?src.filter(c=>c&&typeof c.name==='string'&&c.name.trim()):[];
-  const cleaned=list.map(c=>({id:c.id||uid(),name:c.name.trim(),color:typeof c.color==='string'&&c.color?c.color:DEFAULT_CATEGORY_COLOR,parentId:c.parentId||null}));
-  if(!cleaned.some(c=>c.name===UNCATEGORIZED))cleaned.push({id:uid(),name:UNCATEGORIZED,color:DEFAULT_CATEGORY_COLOR,parentId:null});
+  const cleaned=list.map(c=>({id:c.id||uid(),name:c.name.trim(),color:typeof c.color==='string'&&c.color?c.color:DEFAULT_CATEGORY_COLOR,parentId:c.parentId||null,type:c.type==='income'?'income':'expense'}));
+  // 2 danh mục mặc định luôn phải tồn tại và đúng loại, kể cả với dữ liệu cũ chưa có type
+  if(!cleaned.some(c=>c.name===UNCATEGORIZED))cleaned.push({id:uid(),name:UNCATEGORIZED,color:DEFAULT_CATEGORY_COLOR,parentId:null,type:'expense'});
+  if(!cleaned.some(c=>c.name===UNCATEGORIZED_INCOME))cleaned.push({id:uid(),name:UNCATEGORIZED_INCOME,color:DEFAULT_CATEGORY_COLOR,parentId:null,type:'income'});
+  cleaned.forEach(c=>{
+    if(c.name===UNCATEGORIZED)c.type='expense';
+    if(c.name===UNCATEGORIZED_INCOME)c.type='income';
+  });
   const byId=Object.fromEntries(cleaned.map(c=>[c.id,c]));
   // Chỉ cho phép tối đa 2 cấp (cha/con): nếu parentId trỏ tới 1 danh mục cũng có cha, hoặc trỏ tới chính nó/không tồn tại -> coi là danh mục gốc
   cleaned.forEach(c=>{
-    if(c.name===UNCATEGORIZED){c.parentId=null;return}
+    if(c.name===UNCATEGORIZED||c.name===UNCATEGORIZED_INCOME){c.parentId=null;return}
     if(!c.parentId)return;
     const p=byId[c.parentId];
-    if(!p||p.id===c.id||p.parentId){c.parentId=null}
+    if(!p||p.id===c.id||p.parentId){c.parentId=null;return}
+    c.type=p.type; // danh mục con luôn cùng loại (thu/chi) với danh mục cha
   });
   return cleaned;
 }
@@ -893,12 +926,46 @@ function withDefaults(loaded){
   };
 }
 let data=structuredClone(seed);
-const ui={section:'overview',workView:'tasks',knowledgeFilter:'Tất cả',search:'',period:'month',currency:'ALL',historySearch:'',customFrom:'',customTo:'',chartCurrency:'VND',chartPeriod:'month',chartCompare:false,chartRefDate:new Date(),chartMetric:'expense',chartCatMode:'child',expandedParentCats:new Set(),categoryDetailName:null,fundFilter:'all',fundCurrencyFilter:'ALL',fundView:'card',showArchivedFunds:false,tripPlanFundId:null,tripPlanTab:'setup'};
+const ui={section:'overview',workView:'tasks',knowledgeFilter:'Tất cả',search:'',period:'month',currency:'ALL',historySearch:'',customFrom:'',customTo:'',chartCurrency:'VND',chartPeriod:'month',chartCompare:false,chartRefDate:new Date(),chartMetric:'expense',chartCatMode:'child',donutType:'expense',expandedParentCats:new Set(),categoryDetailName:null,categoryDetailType:'expense',categoryModalType:'expense',fundFilter:'all',fundCurrencyFilter:'ALL',fundView:'card',showArchivedFunds:false,tripPlanFundId:null,tripPlanTab:'setup'};
 
 /* ===================== ĐỒNG BỘ DỮ LIỆU: BẢNG QUAN HỆ THẬT (mỗi loại dữ liệu 1 bảng) ===================== */
 // Không còn lưu 1 JSON gộp nữa. Mỗi hành động (thêm/sửa/xóa) ghi thẳng vào đúng bảng, đúng dòng.
 function setSyncStatus(t){const el=document.getElementById('syncStatus');if(el)el.textContent=t}
 function saveLocalCache(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}catch(e){console.error('Lỗi lưu localStorage:',e)}}
+/* ===================== QUY TẮC PHÂN LOẠI NHẬP NHANH ===================== */
+// Mỗi quy tắc: {id, type:'income'|'expense', category, keyword} — keyword có thể gồm nhiều từ khóa cách nhau bởi dấu phẩy.
+// Đồng bộ qua bảng "quick_rules" trên Supabase (giống categories/transactions...) để dùng chung trên mọi trình duyệt/máy
+// đã mở web đã deploy — localStorage chỉ là bộ nhớ đệm offline, KHÔNG tự chia sẻ giữa các máy khác nhau.
+function quickRuleFromDb(r){return{id:r.id,type:r.type==='income'?'income':'expense',category:r.category||UNCATEGORIZED,keyword:r.keyword||''}}
+function quickRuleToDb(r){return{type:r.type==='income'?'income':'expense',category:r.category,keyword:r.keyword}}
+function quickRuleInsertToDb(r){return{id:r.id,...quickRuleToDb(r)}}
+function loadQuickRulesLocal(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(QUICK_RULES_KEY));
+    if(Array.isArray(raw))return raw.filter(r=>r&&typeof r.keyword==='string'&&r.keyword.trim()).map(r=>({id:r.id||uid(),type:r.type==='income'?'income':'expense',category:typeof r.category==='string'&&r.category?r.category:UNCATEGORIZED,keyword:r.keyword.trim()}));
+  }catch(e){}
+  return[];
+}
+function saveQuickRulesLocal(){try{localStorage.setItem(QUICK_RULES_KEY,JSON.stringify(quickRules))}catch(e){console.error('Lỗi lưu quy tắc nhập nhanh:',e)}}
+let quickRules=loadQuickRulesLocal();
+// Tải quy tắc từ Supabase khi mở app. Nếu bảng "quick_rules" CHƯA được tạo trên Supabase, lệnh select sẽ lỗi
+// và app tự động dùng lại bản lưu trên máy (localStorage) — không làm hỏng phần còn lại của app.
+async function loadQuickRulesFromDb(){
+  if(!sb)return;
+  try{
+    const{data:rows,error}=await sb.from('quick_rules').select('*').order('created_at',{ascending:true});
+    if(error)throw error;
+    if(rows&&rows.length){
+      quickRules=rows.map(quickRuleFromDb);
+      saveQuickRulesLocal();
+    }else if(quickRules.length){
+      // Có quy tắc tạo lúc offline (hoặc trước khi tạo bảng) mà server đang trống -> đẩy lên luôn 1 lần
+      await sb.from('quick_rules').upsert(quickRules.map(quickRuleInsertToDb),{onConflict:'id'});
+    }
+  }catch(e){
+    console.error('Chưa đồng bộ được quy tắc phân loại (có thể bảng "quick_rules" trên Supabase chưa được tạo):',e);
+  }
+}
 async function dbRun(promise,label){
   if(!sb){setSyncStatus('Đã lưu ở máy (không có kết nối máy chủ)');saveLocalCache();return false}
   setSyncStatus('Đang lưu...');
@@ -912,6 +979,11 @@ async function dbRun(promise,label){
     console.error('Supabase '+label+' error:',e);
     saveLocalCache();
     setSyncStatus('Đã lưu ở máy, lỗi đồng bộ máy chủ ('+label+')');
+    // Trước đây lỗi này chỉ hiện ở dòng chữ nhỏ dưới avatar (rất dễ bị bỏ qua) rồi dữ liệu vẫn
+    // hoạt động bình thường từ bộ nhớ/localStorage -> người dùng tưởng đã lưu thành công, trong khi
+    // Supabase thực ra không hề nhận được thay đổi (VD do vi phạm ràng buộc unique(name), RLS chặn...).
+    // Hiện thêm thông báo nổi bật để không bị bỏ sót lỗi đồng bộ.
+    notify('⚠️ Không lưu được lên máy chủ ('+label+'), dữ liệu tạm chỉ có trên máy này');
     return false;
   }
 }
@@ -988,8 +1060,11 @@ async function loadFromSupabase(){
       const budgets={VND:{total:0,categories:{}},JPY:{total:0,categories:{}}};
       (budTotR.data||[]).forEach(r=>{if(budgets[r.currency])budgets[r.currency].total=Number(r.total)||0});
       (budCatR.data||[]).forEach(r=>{if(budgets[r.currency])budgets[r.currency].categories[r.category]=Number(r.amount)||0});
+      // Danh sách danh mục THẬT SỰ đang có trên Supabase (trước khi withDefaultsCategories tự thêm
+      // 2 danh mục mặc định "Chưa phân loại"/"Thu nhập" vào bộ nhớ nếu chúng bị thiếu).
+      const serverCategoryNames=new Set((catR.data||[]).map(r=>r.name));
       data=withDefaults({
-        categories:(catR.data||[]).map(r=>({id:r.id,name:r.name,color:r.color,parentId:r.parent_id||null})),
+        categories:(catR.data||[]).map(r=>({id:r.id,name:r.name,color:r.color,parentId:r.parent_id||null,type:r.type||'expense'})),
         transactions:(txR.data||[]).map(txFromDb),
         tasks:(taskR.data||[]).map(r=>({id:r.id,title:r.title,project:r.project||'',due:r.due||'',priority:r.priority||'',reminder:r.reminder||'',note:r.note||'',done:!!r.done})),
         notes:(noteR.data||[]).map(noteFromDb),
@@ -1001,7 +1076,22 @@ async function loadFromSupabase(){
         payroll:payrollFromDb(payR.data),
         budgets
       });
-      setSyncStatus('Đã đồng bộ');
+      // BUG THỰC SỰ (đã xác nhận qua file export categories_rows.csv): withDefaultsCategories() luôn
+      // tự "chế" thêm 2 danh mục mặc định "Chưa phân loại" (expense) và "Thu nhập" (income) vào
+      // data.categories mỗi lần load, nếu chúng chưa có trong danh sách lấy từ Supabase — nhưng KHÔNG
+      // hề có chỗ nào ghi 2 danh mục được chế này ngược lại lên Supabase. Vì hàm sinh id ngẫu nhiên
+      // (uid()) mỗi lần chạy, id của chúng còn đổi khác nhau sau mỗi lần tải lại trang. Kết quả: app
+      // vẫn hiển thị đủ danh mục (kể cả "Thu nhập") như hình, nhưng bảng categories trên Supabase
+      // thực sự KHÔNG có dòng nào tên "Thu nhập" — đúng như báo cáo "Phần thu nhập đang bị hardcode
+      // trong khi supabase không có dữ liệu". Khắc phục: phát hiện đúng các danh mục mặc định mới được
+      // chế thêm (không có trong serverCategoryNames) rồi ghi thật chúng lên Supabase 1 lần.
+      const missingDefaults=data.categories.filter(c=>!serverCategoryNames.has(c.name)&&(c.name===UNCATEGORIZED||c.name===UNCATEGORIZED_INCOME));
+      if(missingDefaults.length){
+        const ok=await dbInsertMany('categories',missingDefaults.map(c=>({id:c.id,name:c.name,color:c.color,parent_id:c.parentId||null,type:c.type||'expense'})));
+        setSyncStatus(ok?'Đã bổ sung danh mục mặc định còn thiếu lên máy chủ':'Cảnh báo: không lưu được danh mục mặc định lên máy chủ, dữ liệu chỉ có ở máy này');
+      }else{
+        setSyncStatus('Đã đồng bộ');
+      }
     }else{
       // Chưa có dữ liệu trong bảng mới -> thử tự chuyển đổi từ dữ liệu cũ (hyowii_store), rồi ghi vào bảng mới
       const legacy=await migrateLegacyIntoTables(localData);
@@ -1045,7 +1135,7 @@ async function migrateLegacyIntoTables(localData){
 async function pushAllToDb(){
   if(!sb)return;
   const jobs=[];
-  if(data.categories.length)jobs.push(sb.from('categories').upsert(data.categories.map(c=>({id:c.id||uid(),name:c.name,color:c.color,parent_id:c.parentId||null})),{onConflict:'id'}));
+  if(data.categories.length)jobs.push(sb.from('categories').upsert(data.categories.map(c=>({id:c.id||uid(),name:c.name,color:c.color,parent_id:c.parentId||null,type:c.type||'expense'})),{onConflict:'id'}));
   if(data.transactions.length)jobs.push(sb.from('transactions').upsert(data.transactions.map(txToDb),{onConflict:'id'}));
   if(data.tasks.length)jobs.push(sb.from('tasks').upsert(data.tasks.map(t=>({id:t.id,title:t.title,project:t.project||'',due:t.due||'',priority:t.priority||'',reminder:t.reminder||'',note:t.note||'',done:!!t.done})),{onConflict:'id'}));
   if(data.notes.length)jobs.push(sb.from('notes').upsert(data.notes.map(n=>({id:n.id,title:n.title,content:n.content,tag:n.tag,created_at:n.createdAt||new Date().toISOString()})),{onConflict:'id'}));
@@ -1056,6 +1146,7 @@ async function pushAllToDb(){
   ['VND','JPY'].forEach(cur=>Object.entries(data.budgets[cur].categories||{}).forEach(([category,amount])=>budCatRows.push({currency:cur,category,amount:amount||0})));
   if(budCatRows.length)jobs.push(sb.from('budget_categories').upsert(budCatRows,{onConflict:'currency,category'}));
   jobs.push(sb.from('payroll_settings').upsert(payrollToDb(data.payroll),{onConflict:'id'}));
+  if(quickRules.length)jobs.push(sb.from('quick_rules').upsert(quickRules.map(quickRuleInsertToDb),{onConflict:'id'}).then(r=>r,()=>{}));
   try{
     await Promise.all(jobs);
     // funds phải ghi xong trước vì fund_transactions.fund_id và recurring_expenses.fund_id tham chiếu khoá ngoại tới funds.id
@@ -1074,6 +1165,7 @@ async function resetAllTables(){
   await sb.from('recurring_expenses').delete().neq('id','__none__').then(()=>{}).catch(()=>{});
   const tables=['categories','transactions','tasks','notes','knowledge','funds'];
   await Promise.all(tables.map(t=>sb.from(t).delete().neq('id','__none__').then(()=>{}).catch(()=>{})));
+  await sb.from('quick_rules').delete().neq('id','__none__').then(()=>{}).catch(()=>{});
   // budget_totals/budget_categories không có cột id -> xóa theo currency
   await sb.from('budget_totals').delete().neq('currency','__none__');
   await sb.from('budget_categories').delete().neq('currency','__none__');
@@ -1090,22 +1182,77 @@ function parseAmount(raw){
   const num=Number(n);
   return Math.round((Number.isFinite(num)?num:0)*mul);
 }
+// Tách phần ngày/giờ ra khỏi 1 dòng nhập nhanh, trả về {rest, date} — date=null nếu không tìm thấy gì (dùng thời điểm hiện tại).
+// Nhận các dạng: "20/9/2026", "20/9" (không năm -> lấy năm hiện tại), "11h20", "3h", "3:10" — ngày và giờ có thể đứng trước/sau nhau, cách nhau bởi khoảng trắng.
+function extractQuickDateTime(line){
+  let rest=line,day=null,month=null,year=null,hour=null,minute=null;
+  const dateRe=/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/;
+  const dm=rest.match(dateRe);
+  if(dm){
+    const dd=Number(dm[1]),mm=Number(dm[2]);
+    if(dd>=1&&dd<=31&&mm>=1&&mm<=12){
+      day=dd;month=mm;
+      if(dm[3]!==undefined){const y=Number(dm[3]);year=y<100?2000+y:y}
+      rest=rest.slice(0,dm.index)+' '+rest.slice(dm.index+dm[0].length);
+    }
+  }
+  const timeRe=/\b(\d{1,2})[h:](\d{1,2})?\b/i;
+  const tm=rest.match(timeRe);
+  if(tm){
+    const hh=Number(tm[1]),mn=tm[2]!==undefined?Number(tm[2]):0;
+    if(hh>=0&&hh<=23&&mn>=0&&mn<=59){
+      hour=hh;minute=mn;
+      rest=rest.slice(0,tm.index)+' '+rest.slice(tm.index+tm[0].length);
+    }
+  }
+  let date=null;
+  if(day!==null||hour!==null){
+    const now=new Date();
+    const candidate=new Date(year!==null?year:now.getFullYear(),month!==null?month-1:now.getMonth(),day!==null?day:now.getDate(),hour!==null?hour:0,minute!==null?minute:0,0);
+    if(!isNaN(candidate))date=candidate;
+  }
+  return{rest,date};
+}
+// Nhận biết từ khóa loại giao dịch gõ tắt "Thu"/"Chi" đứng riêng (không dính vào từ khác như "chiều", "chợ"...).
+function detectExplicitType(text){
+  if(/(?<![\p{L}\p{N}])thu(?![\p{L}\p{N}])/iu.test(text))return'income';
+  if(/(?<![\p{L}\p{N}])chi(?![\p{L}\p{N}])/iu.test(text))return'expense';
+  return null;
+}
+function stripTypeWord(text){
+  return text.replace(/(?<![\p{L}\p{N}])(thu|chi)(?![\p{L}\p{N}])/giu,' ').replace(/\s{2,}/g,' ').trim();
+}
+// Tìm quy tắc phân loại do người dùng tự thêm khớp với nội dung còn lại (so khớp theo từ khóa, không phân biệt hoa/thường).
+function matchQuickRule(text){
+  const low=text.toLowerCase();
+  for(const r of quickRules){
+    const kws=(r.keyword||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+    if(kws.some(k=>k&&low.includes(k)))return r;
+  }
+  return null;
+}
 function parseQuick(text){
-  return text.split(/[;\n]+/).map(v=>v.trim()).filter(Boolean).map((line,i)=>{
-    const m=line.match(/(?:¥\s*)?\d+(?:[.,]\d+)*\s*(?:tr|k|vnđ|vnd|đ|jpy|yên|yen|円|y|s|m)?/i);
+  return text.split(/[;\n]+/).map(v=>v.trim()).filter(Boolean).map((line)=>{
+    const{rest:afterDate,date:parsedDate}=extractQuickDateTime(line);
+    const m=afterDate.match(/(?<![\p{L}])(?:¥\s*)?\d+(?:[.,]\d+)*\s*(?:tr|k|vnđ|vnd|đ|jpy|yên|yen|円|y|s|m)?(?![\p{L}])/iu);
     if(!m)return null;
     const amount=parseAmount(m[0]);
     if(!amount)return null;
     const currency=/¥|jpy|yên|yen|円|\d\s*[ysm]$/i.test(m[0])?'JPY':'VND';
-    const title=line.replace(m[0],'').replace(/[:=]/g,'').trim()||'Giao dịch';
-    const low=line.toLowerCase();
-    const income=/lương|thưởng|thu nhập|hoàn tiền|^\+/.test(low);
-    const category=income?'Thu nhập'
+    const afterAmount=afterDate.replace(m[0],'');
+    const explicitType=detectExplicitType(afterAmount);
+    const title=stripTypeWord(afterAmount).replace(/[:=,]/g,' ').replace(/\s{2,}/g,' ').trim()||'Giao dịch';
+    const low=title.toLowerCase();
+    const rule=matchQuickRule(title);
+    const income=explicitType?explicitType==='income':(rule?rule.type==='income':/lương|thưởng|thu nhập|hoàn tiền|^\+/.test(low));
+    const category=rule?rule.category
+      :income?'Thu nhập'
       :/netflix|youtube|ytb|spotify|game/.test(low)?'Giải trí'
       :/điện|nước|wifi|internet/.test(low)?'Hóa đơn'
       :/tàu|taxi|grab|xăng|đi lại/.test(low)?'Đi lại'
       :/ăn|cà phê|chợ|siêu thị/.test(low)?'Ăn uống':'Chưa phân loại';
-    return{id:uid(),title,category,amount,currency,type:income?'income':'expense',date:new Date().toISOString()};
+    const date=parsedDate||new Date();
+    return{id:uid(),title,category,amount,currency,type:income?'income':'expense',date:date.toISOString()};
   }).filter(Boolean);
 }
 
@@ -1122,10 +1269,24 @@ function periodRange(){
   }
   return{from:null,to:null};
 }
+// Sắp xếp giao dịch theo THỜI GIAN THẬT (ngày giao dịch, mới nhất lên đầu),
+// không phụ thuộc vào thứ tự nhập liệu. Nếu trùng ngày, giao dịch nhập gần đây hơn
+// (đứng trước trong data.transactions, vì thêm mới bằng unshift) sẽ hiện trước.
+function sortByRealDateDesc(list){
+  return list
+    .map((x,i)=>({x,i}))
+    .sort((a,b)=>{
+      const ta=new Date(a.x.date).getTime(),tb=new Date(b.x.date).getTime();
+      const va=isNaN(ta)?-Infinity:ta,vb=isNaN(tb)?-Infinity:tb;
+      if(vb!==va)return vb-va;
+      return a.i-b.i;
+    })
+    .map(o=>o.x);
+}
 function filteredHistory(){
   const {from,to}=periodRange();
   const q=(ui.historySearch||'').toLowerCase();
-  return data.transactions.filter(x=>{
+  const filtered=data.transactions.filter(x=>{
     if(ui.currency!=='ALL'&&x.currency!==ui.currency)return false;
     if(q&&!(`${x.title} ${x.category}`).toLowerCase().includes(q))return false;
     const d=new Date(x.date);
@@ -1135,6 +1296,7 @@ function filteredHistory(){
     }
     return true;
   });
+  return sortByRealDateDesc(filtered);
 }
 
 /* ===================== BIỂU ĐỒ THU CHI ===================== */
@@ -1193,15 +1355,18 @@ function sumForBucket(bucket,currency,type){
     return n;
   },0);
 }
-function categoryBreakdown(currency,from,to,mode){
+function categoryBreakdown(currency,from,to,mode,txType){
   // mode: 'child' (mặc định, theo danh mục thực tế của giao dịch) hoặc 'parent' (gộp về danh mục cha/gốc)
-  const names=mode==='parent'?rootCategories().map(c=>c.name):categoryNames();
+  // txType: 'expense' (mặc định) hoặc 'income'
+  const t=txType==='income'?'income':'expense';
+  const fallback=t==='income'?UNCATEGORIZED_INCOME:UNCATEGORIZED;
+  const names=mode==='parent'?rootCategories(t).map(c=>c.name):categoryNames(t);
   const totals=Object.fromEntries(names.map(c=>[c,0]));
   data.transactions.forEach(x=>{
-    if(x.currency!==currency||x.type!=='expense')return;
+    if(x.currency!==currency||x.type!==t)return;
     const d=new Date(x.date);
     if(isNaN(d)||d<from||d>=to)return;
-    let cat=categoryNames().includes(x.category)?x.category:UNCATEGORIZED;
+    let cat=categoryNames(t).includes(x.category)?x.category:fallback;
     if(mode==='parent')cat=rootNameOf(cat);
     totals[cat]=(totals[cat]||0)+x.amount;
   });
@@ -1225,15 +1390,39 @@ function donutChartSVG(totals){
   const rMid=(rOuter+rInner)/2,strokeW=rOuter-rInner;
   const circ=2*Math.PI*rMid;
   let offset=0;
-  const circles=entries.map(([cat,val])=>{
+  let circles='',hoverLayers='';
+  entries.forEach(([cat,val])=>{
     const frac=val/total;
     const dash=Math.max(0,frac*circ-1.5);
-    const c=`<circle cx="${cx}" cy="${cy}" r="${rMid}" fill="none" stroke="${categoryColor(cat)||'#ccc'}" stroke-width="${strokeW}" stroke-linecap="butt" stroke-dasharray="${dash.toFixed(2)} ${(circ-dash).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"><title>${esc(cat)}: ${money(val,ui.chartCurrency)}</title></circle>`;
+    const dashOffset=offset;
+    const color=categoryColor(cat)||'#ccc';
+    circles+=`<circle cx="${cx}" cy="${cy}" r="${rMid}" fill="none" stroke="${color}" stroke-width="${strokeW}" stroke-linecap="butt" stroke-dasharray="${dash.toFixed(2)} ${(circ-dash).toFixed(2)}" stroke-dashoffset="${(-dashOffset).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    // Tooltip đẹp (SVG) hiện khi rê chuột vào từng lát, giống hệt kiểu tooltip ở biểu đồ cột:
+    // vùng bắt hover phủ đúng lát cắt (dùng cùng kỹ thuật dasharray, chỉ rộng hơn để dễ trỏ chuột vào),
+    // hộp chú thích đặt cạnh điểm giữa cung, tự căn lại nếu gần sát mép biểu đồ.
+    const pct=Math.round(frac*100);
+    const midAngle=-90+(dashOffset/circ)*360+(frac*360)/2;
+    const pt=polarToCartesian(cx,cy,rOuter+8,midAngle);
+    const tipLines=[
+      {t:cat,c:'#433448',bold:true},
+      {t:`${money(val,ui.chartCurrency)} (${pct}%)`,c:color,bold:true}
+    ];
+    const tw=156,th=18+tipLines.length*16;
+    let tipX=pt.x-tw/2;tipX=Math.max(2,Math.min(size-2-tw,tipX));
+    let tipY=pt.y-th/2;tipY=Math.max(2,Math.min(size-2-th,tipY));
+    const tipText=tipLines.map((ln,idx)=>`<text x="10" y="${18+idx*16}" font-size="${idx===0?11.5:10.5}" font-weight="${ln.bold?700:400}" fill="${ln.c}">${esc(ln.t)}</text>`).join('');
+    hoverLayers+=`<g class="diff-group">
+      <circle class="diff-hover-zone" cx="${cx}" cy="${cy}" r="${rMid}" fill="none" stroke="transparent" stroke-width="${strokeW+16}" stroke-dasharray="${dash.toFixed(2)} ${(circ-dash).toFixed(2)}" stroke-dashoffset="${(-dashOffset).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>
+      <g class="diff-tip" transform="translate(${tipX.toFixed(1)},${tipY.toFixed(1)})">
+        <rect width="${tw}" height="${th}" rx="10" fill="#fffdfe" stroke="#f0dce5"/>
+        ${tipText}
+      </g>
+    </g>`;
     offset+=frac*circ;
-    return c;
   });
-  return{svg:`<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">${circles.join('')}</svg>`,entries,empty:false,total};
+  return{svg:`<svg class="donut-svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" overflow="visible">${circles}${hoverLayers}</svg>`,entries,empty:false,total};
 }
+
 function periodTotal(currency,type,from,to){
   return data.transactions.reduce((n,x)=>{
     if(x.currency!==currency||x.type!==type)return n;
@@ -1268,24 +1457,26 @@ function compareBanner(label,current,prev,goodWhen,periodWord){
   const iconChar=isGood?'✓':'!';
   return `<div class="chart-banner ${cls}"><span class="cb-icon">${iconChar}</span>${esc(label)} <b>${verb}${strong} ${money(absDiff,ui.chartCurrency)}</b>${pct!==null?` (${pct}%)`:''} so với cùng kỳ ${periodWord}</div>`;
 }
-function sumCategoryAmount(name,currency,from,to){
+function sumCategoryAmount(name,currency,from,to,txType){
+  const t=txType==='income'?'income':'expense';
+  const fallback=t==='income'?UNCATEGORIZED_INCOME:UNCATEGORIZED;
   return data.transactions.reduce((n,x)=>{
-    if(x.currency!==currency||x.type!=='expense')return n;
+    if(x.currency!==currency||x.type!==t)return n;
     const d=new Date(x.date);
     if(isNaN(d)||d<from||d>=to)return n;
-    const cat=categoryNames().includes(x.category)?x.category:UNCATEGORIZED;
+    const cat=categoryNames(t).includes(x.category)?x.category:fallback;
     if(cat!==name)return n;
     return n+x.amount;
   },0);
 }
 // Danh sách danh mục con (kèm số tiền) thuộc 1 danh mục cha, dùng khi mở rộng nhóm "Danh mục cha"
-function childCategoryAmounts(parentId,currency,from,to){
-  return childCategoriesOf(parentId).map(c=>({name:c.name,color:categoryColor(c.name),amount:sumCategoryAmount(c.name,currency,from,to)}))
+function childCategoryAmounts(parentId,currency,from,to,txType){
+  return childCategoriesOf(parentId).map(c=>({name:c.name,color:categoryColor(c.name),amount:sumCategoryAmount(c.name,currency,from,to,txType)}))
     .filter(r=>r.amount>0).sort((a,b)=>b.amount-a.amount);
 }
 // Tương tự nhưng kèm số tiền kỳ trước, dùng cho panel "Biến động thu chi"
-function childCategoryDeltaRows(parentId,currency,from,to,prevFrom,prevTo){
-  return childCategoriesOf(parentId).map(c=>({name:c.name,color:categoryColor(c.name),amount:sumCategoryAmount(c.name,currency,from,to),prevAmount:sumCategoryAmount(c.name,currency,prevFrom,prevTo)}))
+function childCategoryDeltaRows(parentId,currency,from,to,prevFrom,prevTo,txType){
+  return childCategoriesOf(parentId).map(c=>({name:c.name,color:categoryColor(c.name),amount:sumCategoryAmount(c.name,currency,from,to,txType),prevAmount:sumCategoryAmount(c.name,currency,prevFrom,prevTo,txType)}))
     .filter(r=>r.amount>0||r.prevAmount>0).sort((a,b)=>b.amount-a.amount);
 }
 
@@ -1383,8 +1574,8 @@ function renderCatRows(rows,showDelta,mode,ctx){
     let childrenHtml='';
     if(expanded&&ctx){
       const childRows=showDelta
-        ?childCategoryDeltaRows(cat.id,ctx.currency,ctx.from,ctx.to,ctx.prevFrom,ctx.prevTo)
-        :childCategoryAmounts(cat.id,ctx.currency,ctx.from,ctx.to);
+        ?childCategoryDeltaRows(cat.id,ctx.currency,ctx.from,ctx.to,ctx.prevFrom,ctx.prevTo,ctx.txType)
+        :childCategoryAmounts(cat.id,ctx.currency,ctx.from,ctx.to,ctx.txType);
       childrenHtml=childRows.length
         ?`<div class="chart-cat-children">${childRows.map(cr=>`<div class="chart-cat-row chart-cat-row-clickable" data-cat-detail="${esc(cr.name)}"><span class="ccr-dot" style="background:${cr.color}"></span><span class="ccr-name">${esc(cr.name)}</span><span class="ccr-amount"><b>${money(cr.amount,ui.chartCurrency)}</b>${showDelta?catRowDeltaHtml(cr.amount,cr.prevAmount):''}</span></div>`).join('')}</div>`
         :`<div class="chart-cat-children-empty">Chưa có chi tiêu ở danh mục con</div>`;
@@ -1409,47 +1600,154 @@ function buildBarChartRows(refDate,metric){
   }
   return rows;
 }
+// Cột "Chênh lệch": thu nhập (xanh lá) và chi tiêu (hồng) vẽ kế bên nhau (dạng cột đôi),
+// kèm trục tung hiện giá tiền (rút gọn nghìn/triệu/tỷ) để dễ theo dõi.
+const DIFF_INCOME_COLOR='#61987d',DIFF_EXPENSE_COLOR='#db6f9f';
+// Làm tròn bước chia trục tung về số "đẹp" (1/2/5 x 10^n)
+function niceAxisStep(rawStep){
+  if(!(rawStep>0))return 1;
+  const mag=Math.pow(10,Math.floor(Math.log10(rawStep)));
+  const norm=rawStep/mag;
+  const niceNorm=norm<=1?1:norm<=2?2:norm<=5?5:10;
+  return niceNorm*mag;
+}
+// Rút gọn số tiền cho nhãn trục: 1.500.000 -> "1.5tr", 25.000 -> "25k"
+function compactAxisLabel(n){
+  const sign=n<0?'-':'';
+  const abs=Math.abs(n);
+  const fmt=v=>{const r=Math.round(v*10)/10;return Number.isInteger(r)?String(r):r.toFixed(1)};
+  if(abs>=1e9)return sign+fmt(abs/1e9)+'tỷ';
+  if(abs>=1e6)return sign+fmt(abs/1e6)+'tr';
+  if(abs>=1e3)return sign+fmt(abs/1e3)+'k';
+  return sign+String(Math.round(abs));
+}
+function diffOverlapBarSVG(rows){
+  const hasData=rows.some(r=>r.income!==0||r.expense!==0);
+  if(!hasData)return '<div class="chart-empty">Chưa có dữ liệu trong kỳ này</div>';
+  const w=640,h=270,padL=44,padB=26,padT=14,padR=10;
+  const innerW=w-padL-padR,innerH=h-padT-padB;
+  const maxVal=Math.max(1,...rows.flatMap(r=>[r.income,r.expense]));
+  const tickCount=4;
+  const step=niceAxisStep(maxVal/tickCount);
+  const axisMax=step*tickCount;
+  const scale=innerH/axisMax;
+  const baseY=padT+innerH;
+  const groupW=innerW/rows.length;
+  const outerGap=8,pairGap=3;
+  const barW=Math.max(5,Math.min(20,(groupW-outerGap*2-pairGap)/2));
+  let bars='',hoverLayers='',axisLabels='',gridLines='';
+  // Lưới ngang + nhãn trục tung (giá tiền)
+  for(let t=0;t<=tickCount;t++){
+    const val=step*t;
+    const y=baseY-val*scale;
+    if(t>0)gridLines+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="#f3e3ea" stroke-width="1"/>`;
+    gridLines+=`<text x="${(padL-8).toFixed(1)}" y="${(y+3).toFixed(1)}" font-size="9" text-anchor="end" fill="#987fa2">${esc(compactAxisLabel(val))}</text>`;
+  }
+  rows.forEach((r,i)=>{
+    const groupX=padL+i*groupW;
+    const cx=groupX+groupW/2;
+    const incomeH=r.income*scale,expenseH=r.expense*scale;
+    const incomeX=cx-pairGap/2-barW,expenseX=cx+pairGap/2;
+    const diff=r.income-r.expense;
+    const diffColor=diff>=0?'#61987d':'#ca6884';
+    if(incomeH>0.3)bars+=`<rect x="${incomeX.toFixed(1)}" y="${(baseY-incomeH).toFixed(1)}" width="${barW.toFixed(1)}" height="${incomeH.toFixed(1)}" rx="3" fill="${DIFF_INCOME_COLOR}"/>`;
+    if(expenseH>0.3)bars+=`<rect x="${expenseX.toFixed(1)}" y="${(baseY-expenseH).toFixed(1)}" width="${barW.toFixed(1)}" height="${expenseH.toFixed(1)}" rx="3" fill="${DIFF_EXPENSE_COLOR}"/>`;
+    // Tooltip đẹp (SVG, hiện khi hover cả nhóm cột): tuần/tháng, thu nhập, chi tiêu, chênh lệch
+    // Vẽ vùng bắt hover + tooltip ở lớp riêng SAU tất cả các cột, để tooltip luôn nổi lên trên, không bị nhóm cột bên cạnh đè lên
+    const tw=168,th=70;
+    let tipX=cx-tw/2;tipX=Math.max(4,Math.min(w-4-tw,tipX));
+    const topY=baseY-Math.max(incomeH,expenseH);
+    let tipY=topY-th-8;if(tipY<4)tipY=4;
+    hoverLayers+=`<g class="diff-group">
+      <rect class="diff-hover-zone" x="${groupX.toFixed(1)}" y="${padT}" width="${groupW.toFixed(1)}" height="${innerH.toFixed(1)}" fill="transparent"/>
+      <g class="diff-tip" transform="translate(${tipX.toFixed(1)},${tipY.toFixed(1)})">
+        <rect width="${tw}" height="${th}" rx="10" fill="#fffdfe" stroke="#f0dce5"/>
+        <text x="11" y="19" font-size="11.5" font-weight="700" fill="#433448">${esc(r.label)}</text>
+        <text x="11" y="35" font-size="10.5" fill="${DIFF_INCOME_COLOR}">Thu nhập: ${esc(money(r.income,ui.chartCurrency))}</text>
+        <text x="11" y="49" font-size="10.5" fill="${DIFF_EXPENSE_COLOR}">Chi tiêu: ${esc(money(r.expense,ui.chartCurrency))}</text>
+        <text x="11" y="63" font-size="10.5" font-weight="700" fill="${diffColor}">Chênh lệch: ${diff>=0?'+':'-'}${esc(money(Math.abs(diff),ui.chartCurrency))}</text>
+      </g>
+    </g>`;
+    axisLabels+=`<text x="${(groupX+groupW/2).toFixed(1)}" y="${h-8}" font-size="9" text-anchor="middle" fill="#987fa2">${esc(r.label)}</text>`;
+  });
+  const baseline=`<line x1="${padL}" y1="${baseY.toFixed(1)}" x2="${w-padR}" y2="${baseY.toFixed(1)}" stroke="#e7ccd8" stroke-width="1"/>`;
+  return `<svg class="bar-chart-svg" viewBox="0 0 ${w} ${h}" overflow="visible">${gridLines}${baseline}${bars}${axisLabels}${hoverLayers}</svg>`;
+}
 function barChartSVG(rows,metric){
-  const pick=r=>metric==='income'?r.income:metric==='expense'?r.expense:r.diff;
-  const pickPrev=r=>metric==='income'?(r.prevIncome||0):metric==='expense'?(r.prevExpense||0):(r.prevDiff||0);
+  if(metric==='diff')return diffOverlapBarSVG(rows);
+  const pick=r=>metric==='income'?r.income:r.expense;
+  const pickPrev=r=>metric==='income'?(r.prevIncome||0):(r.prevExpense||0);
   const hasData=rows.some(r=>pick(r)!==0||(ui.chartCompare&&pickPrev(r)!==0));
   if(!hasData)return '<div class="chart-empty">Chưa có dữ liệu trong kỳ này</div>';
-  const w=640,h=260,padL=10,padB=26,padT=14,padR=10;
+  const w=640,h=270,padL=44,padB=26,padT=14,padR=10;
   const innerW=w-padL-padR,innerH=h-padT-padB;
   const values=[];
   rows.forEach(r=>{values.push(pick(r));if(ui.chartCompare)values.push(pickPrev(r))});
-  const maxPos=Math.max(1,...values.map(v=>Math.max(0,v)));
-  const maxNeg=Math.max(0,...values.map(v=>Math.max(0,-v)));
-  const hasNeg=maxNeg>0;
-  const zeroY=hasNeg?padT+innerH*(maxPos/(maxPos+maxNeg)):padT+innerH;
-  const scale=hasNeg?innerH/(maxPos+maxNeg):innerH/maxPos;
+  const maxVal=Math.max(1,...values);
+  const tickCount=4;
+  const step=niceAxisStep(maxVal/tickCount);
+  const axisMax=step*tickCount;
+  const scale=innerH/axisMax;
+  const baseY=padT+innerH;
   const groupW=innerW/rows.length;
   const barGap=6;
   const barW=ui.chartCompare?Math.max(10,Math.min(34,groupW-barGap*2)):Math.max(6,Math.min(34,groupW-barGap*2));
   const colorCur=metricColor(metric);
-  let bars='',axisLabels='';
+  const metricLbl=metricLabel(metric);
+  let bars='',hoverLayers='',axisLabels='',gridLines='';
+  // Lưới ngang + nhãn trục tung (giá tiền)
+  for(let t=0;t<=tickCount;t++){
+    const val=step*t;
+    const y=baseY-val*scale;
+    if(t>0)gridLines+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="#f3e3ea" stroke-width="1"/>`;
+    gridLines+=`<text x="${(padL-8).toFixed(1)}" y="${(y+3).toFixed(1)}" font-size="9" text-anchor="end" fill="#987fa2">${esc(compactAxisLabel(val))}</text>`;
+  }
   rows.forEach((r,i)=>{
     const groupX=padL+i*groupW;
     const cx=groupX+groupW/2;
-    const v1=pick(r),v1h=Math.abs(v1)*scale,v1y=v1>=0?zeroY-v1h:zeroY;
-    const c1=metric==='diff'?(v1>=0?'#61987d':'#ca6884'):colorCur;
+    const v1=pick(r),v1h=v1*scale,v1y=baseY-v1h;
+    let tipLines=[`Tuần/kỳ: ${r.label}`.replace('Tuần/kỳ: ','')];
     if(ui.chartCompare){
-      const v2=pickPrev(r),v2h=Math.abs(v2)*scale,v2y=v2>=0?zeroY-v2h:zeroY;
+      const v2=pickPrev(r),v2h=v2*scale,v2y=baseY-v2h;
       const wBack=barW;
       const wFront=barW*0.52;
       const backX=cx-wBack/2,frontX=cx-wFront/2;
       // Cột kỳ trước (nhạt, rộng hơn) vẽ trước làm nền
-      bars+=`<rect x="${backX.toFixed(1)}" y="${v2y.toFixed(1)}" width="${wBack.toFixed(1)}" height="${Math.max(0,v2h).toFixed(1)}" rx="3" fill="${c1}" fill-opacity="0.28"><title>${esc(r.label)} (kỳ trước): ${money(v2,ui.chartCurrency)}</title></rect>`;
+      bars+=`<rect x="${backX.toFixed(1)}" y="${v2y.toFixed(1)}" width="${wBack.toFixed(1)}" height="${Math.max(0,v2h).toFixed(1)}" rx="3" fill="${colorCur}" fill-opacity="0.28"/>`;
       // Cột kỳ này (đậm, hẹp hơn) chồng lên giữa, chừa mép 2 bên để thấy phần chênh lệch
-      bars+=`<rect x="${frontX.toFixed(1)}" y="${v1y.toFixed(1)}" width="${wFront.toFixed(1)}" height="${Math.max(0,v1h).toFixed(1)}" rx="3" fill="${c1}"><title>${esc(r.label)}: ${money(v1,ui.chartCurrency)}</title></rect>`;
+      bars+=`<rect x="${frontX.toFixed(1)}" y="${v1y.toFixed(1)}" width="${wFront.toFixed(1)}" height="${Math.max(0,v1h).toFixed(1)}" rx="3" fill="${colorCur}"/>`;
+      const d=v1-v2;
+      tipLines=[
+        {t:r.label,c:'#433448',bold:true},
+        {t:`Kỳ này: ${money(v1,ui.chartCurrency)}`,c:colorCur},
+        {t:`Kỳ trước: ${money(v2,ui.chartCurrency)}`,c:colorCur,op:0.55},
+        {t:`Thay đổi: ${d>=0?'+':'-'}${money(Math.abs(d),ui.chartCurrency)}`,c:d>=0?'#61987d':'#ca6884',bold:true}
+      ];
     }else{
       const b1x=cx-barW/2;
-      bars+=`<rect x="${b1x.toFixed(1)}" y="${v1y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(0,v1h).toFixed(1)}" rx="3" fill="${c1}"><title>${esc(r.label)}: ${money(v1,ui.chartCurrency)}</title></rect>`;
+      bars+=`<rect x="${b1x.toFixed(1)}" y="${v1y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(0,v1h).toFixed(1)}" rx="3" fill="${colorCur}"/>`;
+      tipLines=[
+        {t:r.label,c:'#433448',bold:true},
+        {t:`${metricLbl}: ${money(v1,ui.chartCurrency)}`,c:colorCur,bold:true}
+      ];
     }
+    // Tooltip đẹp (SVG, hiện khi hover cả cột), vẽ ở lớp riêng sau tất cả các cột để luôn nổi lên trên
+    const tw=168,th=18+tipLines.length*16;
+    let tipX=cx-tw/2;tipX=Math.max(4,Math.min(w-4-tw,tipX));
+    const topY=baseY-Math.max(v1h,ui.chartCompare?(pickPrev(r)*scale):0);
+    let tipY=topY-th-8;if(tipY<4)tipY=4;
+    const tipText=tipLines.map((ln,idx)=>`<text x="11" y="${19+idx*16}" font-size="${idx===0?11.5:10.5}" font-weight="${ln.bold?700:400}" fill="${ln.c}" ${ln.op?`fill-opacity="${ln.op}"`:''}>${esc(ln.t)}</text>`).join('');
+    hoverLayers+=`<g class="diff-group">
+      <rect class="diff-hover-zone" x="${groupX.toFixed(1)}" y="${padT}" width="${groupW.toFixed(1)}" height="${innerH.toFixed(1)}" fill="transparent"/>
+      <g class="diff-tip" transform="translate(${tipX.toFixed(1)},${tipY.toFixed(1)})">
+        <rect width="${tw}" height="${th}" rx="10" fill="#fffdfe" stroke="#f0dce5"/>
+        ${tipText}
+      </g>
+    </g>`;
     axisLabels+=`<text x="${(groupX+groupW/2).toFixed(1)}" y="${h-8}" font-size="9" text-anchor="middle" fill="#987fa2">${esc(r.label)}</text>`;
   });
-  const baseline=`<line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${w-padR}" y2="${zeroY.toFixed(1)}" stroke="#f0dce5" stroke-width="1"/>`;
-  return `<svg class="bar-chart-svg" viewBox="0 0 ${w} ${h}">${baseline}${bars}${axisLabels}</svg>`;
+  const baseline=`<line x1="${padL}" y1="${baseY.toFixed(1)}" x2="${w-padR}" y2="${baseY.toFixed(1)}" stroke="#e7ccd8" stroke-width="1"/>`;
+  return `<svg class="bar-chart-svg" viewBox="0 0 ${w} ${h}" overflow="visible">${gridLines}${baseline}${bars}${axisLabels}${hoverLayers}</svg>`;
 }
 function renderChartsPanel(){
   const refDate=ui.chartRefDate;
@@ -1458,24 +1756,45 @@ function renderChartsPanel(){
   const rangeFrom=buckets[0]?buckets[0].from:refDate;
   const rangeTo=buckets.length?buckets[buckets.length-1].to:refDate;
   const{from:prevFrom,to:prevTo}=prevRangeFor(ui.chartPeriod,refDate);
-  const periodWord=prevPeriodWord(ui.chartPeriod);
   const periodLabel=chartPeriodLabel(ui.chartPeriod,refDate);
 
-  const expenseTotal=periodTotal(currency,'expense',rangeFrom,rangeTo);
-  const incomeTotal=periodTotal(currency,'income',rangeFrom,rangeTo);
-  const prevExpenseTotal=periodTotal(currency,'expense',prevFrom,prevTo);
-  const prevIncomeTotal=periodTotal(currency,'income',prevFrom,prevTo);
+  // Nếu kỳ đang xem (tuần/tháng/năm hiện tại) CHƯA kết thúc (còn nằm trong tương lai so với hôm nay),
+  // thì so sánh "cùng kỳ" phải cắt kỳ trước theo ĐÚNG số ngày đã trôi qua của kỳ này —
+  // tránh so sánh lệch kiểu "5 ngày đầu tháng này" với "trọn 31 ngày của tháng trước" (gây % ảo, vô lý).
+  const now=new Date();
+  const isOngoing=rangeFrom<=now&&rangeTo>now;
+  const effRangeTo=isOngoing?now:rangeTo;
+  let effPrevTo=prevTo,periodWord=prevPeriodWord(ui.chartPeriod);
+  if(isOngoing){
+    const elapsedMs=effRangeTo-rangeFrom;
+    const cappedPrevTo=new Date(prevFrom.getTime()+elapsedMs);
+    if(cappedPrevTo<prevTo){
+      effPrevTo=cappedPrevTo;
+      const elapsedDays=Math.max(1,Math.round(elapsedMs/86400000));
+      periodWord=`${elapsedDays} ngày đầu ${periodWord}`;
+    }
+  }
 
-  const breakdown=categoryBreakdown(currency,rangeFrom,rangeTo,ui.chartCatMode);
+  const expenseTotal=periodTotal(currency,'expense',rangeFrom,effRangeTo);
+  const incomeTotal=periodTotal(currency,'income',rangeFrom,effRangeTo);
+  const prevExpenseTotal=periodTotal(currency,'expense',prevFrom,effPrevTo);
+  const prevIncomeTotal=periodTotal(currency,'income',prevFrom,effPrevTo);
+
+  const breakdown=categoryBreakdown(currency,rangeFrom,effRangeTo,ui.chartCatMode,ui.donutType);
   const donut=donutChartSVG(breakdown);
   const pieRows=donut.entries.map(([name,amount])=>({name,color:categoryColor(name),amount,pct:donut.total>0?Math.round(amount/donut.total*100):0}));
+  const donutIsIncome=ui.donutType==='income';
+  const donutTypeTabs=`<div class="chart-metric-tabs chart-donuttype-tabs">
+        <button type="button" data-donuttype="expense" class="${donutIsIncome?'':'active'}">Chi tiêu</button>
+        <button type="button" data-donuttype="income" class="${donutIsIncome?'active':''}">Thu nhập</button>
+      </div>`;
 
   const barRows=buildBarChartRows(refDate,ui.chartMetric);
   const barSVG=barChartSVG(barRows,ui.chartMetric);
   const metricCurrent=ui.chartMetric==='income'?incomeTotal:ui.chartMetric==='expense'?expenseTotal:(incomeTotal-expenseTotal);
   const metricPrev=ui.chartMetric==='income'?prevIncomeTotal:ui.chartMetric==='expense'?prevExpenseTotal:(prevIncomeTotal-prevExpenseTotal);
   const metricGood=ui.chartMetric==='expense'?'down':'up';
-  const deltaRows=ui.chartMetric==='expense'?categoryDeltaRows(currency,rangeFrom,rangeTo,prevFrom,prevTo,ui.chartCatMode):[];
+  const deltaRows=ui.chartMetric==='expense'?categoryDeltaRows(currency,rangeFrom,effRangeTo,prevFrom,effPrevTo,ui.chartCatMode):[];
   const catModeTabs=`<div class="chart-metric-tabs chart-catmode-tabs">
         <button type="button" data-catmode="child" class="${ui.chartCatMode==='child'?'active':''}">Danh mục con</button>
         <button type="button" data-catmode="parent" class="${ui.chartCatMode==='parent'?'active':''}">Danh mục cha</button>
@@ -1500,10 +1819,11 @@ function renderChartsPanel(){
   </div>
   <div class="chart-grid">
     <article class="panel chart-card">
-      <h2>Phân bổ chi tiêu</h2>
+      <h2>Phân bổ ${donutIsIncome?'thu nhập':'chi tiêu'}</h2>
       <p class="chart-sub">Theo danh mục, ${esc(periodLabel)} · ${ui.chartCurrency}</p>
+      ${donutTypeTabs}
       ${catModeTabs}
-      ${donut.empty?'<div class="chart-empty">Chưa có chi tiêu trong kỳ này</div>':`<div class="donut-wrap"><div style="position:relative"><div class="donut-center-label"><small>Tổng chi tiêu</small><b>${money(donut.total,ui.chartCurrency)}</b></div>${donut.svg}</div></div>${renderCatRows(pieRows,false,ui.chartCatMode,{currency,from:rangeFrom,to:rangeTo})}`}
+      ${donut.empty?`<div class="chart-empty">Chưa có ${donutIsIncome?'thu nhập':'chi tiêu'} trong kỳ này</div>`:`<div class="donut-wrap"><div style="position:relative"><div class="donut-center-label"><small>Tổng ${donutIsIncome?'thu nhập':'chi tiêu'}</small><b>${money(donut.total,ui.chartCurrency)}</b></div>${donut.svg}</div></div>${renderCatRows(pieRows,false,ui.chartCatMode,{currency,from:rangeFrom,to:rangeTo,txType:ui.donutType})}`}
     </article>
     <article class="panel chart-card">
       <h2>Biến động thu chi</h2>
@@ -1516,10 +1836,12 @@ function renderChartsPanel(){
       <strong style="display:block;margin-bottom:10px;font:600 24px 'Baloo 2',sans-serif">${money(metricCurrent,ui.chartCurrency)}</strong>
       ${compareBanner(metricLabel(ui.chartMetric),metricCurrent,metricPrev,metricGood,periodWord)}
       ${barSVG}
-      <div class="bar-chart-legend">${ui.chartCompare?
-        `<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${metricColor(ui.chartMetric)}"></span>${esc(metricLabel(ui.chartMetric))} kỳ này</span><span class="chart-legend-item"><span class="chart-legend-dot" style="background:${metricColor(ui.chartMetric)};opacity:.32"></span>${esc(metricLabel(ui.chartMetric))} kỳ trước</span>`
-        :`<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${metricColor(ui.chartMetric)}"></span>${esc(metricLabel(ui.chartMetric))}</span>`}</div>
-      ${ui.chartMetric==='expense'?catModeTabs+renderCatRows(deltaRows,true,ui.chartCatMode,{currency,from:rangeFrom,to:rangeTo,prevFrom,prevTo}):''}
+      <div class="bar-chart-legend">${ui.chartMetric==='diff'?
+        `<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${DIFF_INCOME_COLOR}"></span>Thu nhập</span><span class="chart-legend-item"><span class="chart-legend-dot" style="background:${DIFF_EXPENSE_COLOR}"></span>Chi tiêu</span>`
+        :(ui.chartCompare?
+          `<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${metricColor(ui.chartMetric)}"></span>${esc(metricLabel(ui.chartMetric))} kỳ này</span><span class="chart-legend-item"><span class="chart-legend-dot" style="background:${metricColor(ui.chartMetric)};opacity:.32"></span>${esc(metricLabel(ui.chartMetric))} kỳ trước</span>`
+          :`<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${metricColor(ui.chartMetric)}"></span>${esc(metricLabel(ui.chartMetric))}</span>`)}</div>
+      ${ui.chartMetric==='expense'?catModeTabs+renderCatRows(deltaRows,true,ui.chartCatMode,{currency,from:rangeFrom,to:rangeTo,prevFrom,prevTo,txType:'expense'}):''}
     </article>
   </div>`;
 }
@@ -1556,35 +1878,43 @@ function renderBudgetPanel(){
 }
 
 /* ===================== QUẢN LÝ DANH MỤC ===================== */
-// Danh sách option cho select chọn "danh mục cha": chỉ cho phép chọn các danh mục gốc
-// (không phải chính nó, không phải Chưa phân loại) — đảm bảo tối đa 2 cấp cha/con.
-function categoryParentOptions(excludeId,selectedParentId){
-  const opts=rootCategories().filter(r=>r.name!==UNCATEGORIZED&&r.id!==excludeId)
+// Danh sách option cho select chọn "danh mục cha": chỉ cho phép chọn các danh mục gốc CÙNG LOẠI (thu/chi)
+// (không phải chính nó, không phải 2 danh mục mặc định) — đảm bảo tối đa 2 cấp cha/con.
+function categoryParentOptions(excludeId,selectedParentId,type){
+  // "Chưa phân loại" (chi tiêu) không bao giờ được chọn làm cha, nhưng "Thu nhập" (mặc định thu nhập)
+  // thì được phép làm danh mục cha cho các danh mục thu nhập khác.
+  const opts=rootCategories(type).filter(r=>r.name!==UNCATEGORIZED&&r.id!==excludeId)
     .map(r=>`<option value="${r.id}" ${selectedParentId===r.id?'selected':''}>${esc(r.name)}</option>`).join('');
   return `<option value="">— Là danh mục cha —</option>${opts}`;
 }
 function categoryModalBodyHTML(){
-  const tree=categoryTreeList();
-  return `<div class="task-modal-field"><label>Thêm danh mục mới</label>
+  const type=ui.categoryModalType==='income'?'income':'expense';
+  const tree=categoryTreeList(type);
+  const typeTabs=`<div class="chart-metric-tabs chart-catmode-tabs" style="margin-bottom:14px">
+        <button type="button" data-catmodal-type="expense" class="${type==='expense'?'active':''}">Danh mục chi tiêu</button>
+        <button type="button" data-catmodal-type="income" class="${type==='income'?'active':''}">Danh mục thu nhập</button>
+      </div>`;
+  return `${typeTabs}<div class="task-modal-field"><label>Thêm danh mục ${type==='income'?'thu nhập':'chi tiêu'} mới</label>
     <div class="category-add-row">
-      <input type="text" id="newCategoryName" placeholder="Tên danh mục mới (vd: Sức khỏe)">
+      <input type="text" id="newCategoryName" placeholder="Tên danh mục mới (vd: ${type==='income'?'Freelance':'Sức khỏe'})">
       <input type="color" id="newCategoryColor" value="#db6f9f">
       <button class="primary-button" id="addCategoryBtn" style="height:41px;padding:0 16px;white-space:nowrap">＋ Thêm</button>
     </div>
-    <select id="newCategoryParent" title="Chọn danh mục cha nếu đây là danh mục con">${categoryParentOptions(null,null)}</select>
+    <select id="newCategoryParent" title="Chọn danh mục cha nếu đây là danh mục con">${categoryParentOptions(null,null,type)}</select>
   </div>
   <div class="field-error" id="categoryError"></div>
   <div class="category-manage-list">${tree.map(t=>{
     const c=categoryById(t.id);
     const isChild=t.depth>0;
     const rowCls=isChild?'category-manage-row category-manage-row-child':'category-manage-row';
-    const isUncat=c.name===UNCATEGORIZED;
-    // Chỉ danh mục KHÔNG có con mới được chuyển thành con của danh mục khác (giới hạn 2 cấp)
-    const parentCell=isUncat
-      ?'<span class="cat-parent-lock">—</span>'
-      :(t.hasChildren
-        ?'<span class="cat-parent-lock">Danh mục cha</span>'
-        :`<select data-cat-parent="${c.id}" title="Chuyển vào danh mục cha">${categoryParentOptions(c.id,c.parentId)}</select>`);
+    const isUncat=c.name===UNCATEGORIZED||c.name===UNCATEGORIZED_INCOME;
+    // Danh mục mặc định (isUncat) và danh mục đã có con thì không hiện select để tự chọn cha —
+    // nhưng nếu đã có con (kể cả "Thu nhập" một khi có danh mục khác chọn nó làm cha) thì hiện
+    // nhãn "Danh mục cha" thay vì dấu gạch ngang. Chỉ danh mục KHÔNG có con mới được chuyển thành
+    // con của danh mục khác (giới hạn 2 cấp).
+    const parentCell=(isUncat||t.hasChildren)
+      ?`<span class="cat-parent-lock">${t.hasChildren?'Danh mục cha':'—'}</span>`
+      :`<select data-cat-parent="${c.id}" title="Chuyển vào danh mục cha">${categoryParentOptions(c.id,c.parentId,type)}</select>`;
     return `<div class="${rowCls}">
       <input type="color" data-cat-color="${esc(c.name)}" value="${c.color}" title="Đổi màu">
       <input type="text" data-cat-name="${esc(c.name)}" value="${esc(c.name)}" ${isUncat?'disabled title="Danh mục mặc định, không thể đổi tên"':''}>
@@ -1601,6 +1931,11 @@ function renderCategoryModal(){
 }
 function bindCategoryModal(){
   const errEl=$('#categoryError');
+  const activeType=ui.categoryModalType==='income'?'income':'expense';
+  $$('[data-catmodal-type]').forEach(el=>el.onclick=()=>{
+    ui.categoryModalType=el.dataset.catmodalType;
+    renderCategoryModal();
+  });
   $('#addCategoryBtn').onclick=()=>{
     const name=$('#newCategoryName').value.trim();
     const color=$('#newCategoryColor').value||DEFAULT_CATEGORY_COLOR;
@@ -1609,9 +1944,9 @@ function bindCategoryModal(){
     if(errEl)errEl.textContent='';
     if(!name){if(errEl)errEl.textContent='Vui lòng nhập tên danh mục';return}
     if(categoryNames().some(n=>n.toLowerCase()===name.toLowerCase())){if(errEl)errEl.textContent='Danh mục này đã tồn tại';return}
-    const newCat={id:uid(),name,color,parentId};
+    const newCat={id:uid(),name,color,parentId,type:activeType};
     data.categories.push(newCat);
-    dbInsert('categories',{id:newCat.id,name:newCat.name,color:newCat.color,parent_id:parentId});
+    dbInsert('categories',{id:newCat.id,name:newCat.name,color:newCat.color,parent_id:parentId,type:activeType});
     notify('Đã thêm danh mục mới');
     renderCategoryModal();
     render();
@@ -1638,7 +1973,7 @@ function bindCategoryModal(){
     const oldName=el.dataset.catName;
     const newName=el.value.trim();
     if(errEl)errEl.textContent='';
-    if(oldName===UNCATEGORIZED)return;
+    if(oldName===UNCATEGORIZED||oldName===UNCATEGORIZED_INCOME)return;
     if(!newName){el.value=oldName;return}
     if(newName!==oldName&&categoryNames().some(n=>n.toLowerCase()===newName.toLowerCase())){
       if(errEl)errEl.textContent='Tên danh mục này đã được dùng';
@@ -1669,19 +2004,20 @@ function bindCategoryModal(){
   });
   $$('[data-cat-delete]').forEach(el=>el.onclick=()=>{
     const name=el.dataset.catDelete;
-    if(name===UNCATEGORIZED)return;
+    if(name===UNCATEGORIZED||name===UNCATEGORIZED_INCOME)return;
     const cat=data.categories.find(c=>c.name===name);
+    const fallback=cat&&categoryType(cat)==='income'?UNCATEGORIZED_INCOME:UNCATEGORIZED;
     const orphanChildren=cat?childCategoriesOf(cat.id):[];
     const warn=orphanChildren.length?` Các danh mục con (${orphanChildren.map(c=>c.name).join(', ')}) sẽ tự trở thành danh mục cha riêng.`:'';
-    if(!confirm(`Xóa danh mục "${name}"? Các giao dịch thuộc danh mục này sẽ chuyển về "${UNCATEGORIZED}".${warn}`))return;
+    if(!confirm(`Xóa danh mục "${name}"? Các giao dịch thuộc danh mục này sẽ chuyển về "${fallback}".${warn}`))return;
     data.categories=data.categories.filter(c=>c.name!==name);
     orphanChildren.forEach(c=>{c.parentId=null});
-    data.transactions.forEach(x=>{if(x.category===name)x.category=UNCATEGORIZED});
+    data.transactions.forEach(x=>{if(x.category===name)x.category=fallback});
     ['VND','JPY'].forEach(cur=>{delete data.budgets[cur].categories[name]});
     (async()=>{
       if(cat)await dbDelete('categories',cat.id);
       await Promise.all(orphanChildren.map(c=>dbUpdate('categories',c.id,{parent_id:null})));
-      await dbUpdateWhere('transactions','category',name,{category:UNCATEGORIZED});
+      await dbUpdateWhere('transactions','category',name,{category:fallback});
       await dbDeleteWhere('budget_categories','category',name);
       saveLocalCache();
     })();
@@ -1692,9 +2028,89 @@ function bindCategoryModal(){
 }
 
 /* ===================== HIỂN THỊ CÁC PHẦN ===================== */
+/* ===================== QUẢN LÝ QUY TẮC PHÂN LOẠI NHẬP NHANH ===================== */
+function quickRuleTypeOptions(selected){
+  return`<option value="expense" ${selected==='income'?'':'selected'}>Chi</option><option value="income" ${selected==='income'?'selected':''}>Thu</option>`;
+}
+function quickRuleRowHTML(r){
+  return`<div class="category-manage-row" data-rule-row="${r.id}" style="grid-template-columns:74px 1fr 1fr 30px">
+    <select data-rule-type="${r.id}">${quickRuleTypeOptions(r.type)}</select>
+    <input type="text" data-rule-keyword="${r.id}" value="${esc(r.keyword)}" placeholder="Từ khóa, cách nhau bởi dấu phẩy">
+    <select data-rule-category="${r.id}">${manualCategoryOptions(r.type,r.category)}</select>
+    <button class="row-delete" data-rule-delete="${r.id}" title="Xóa quy tắc">×</button>
+  </div>`;
+}
+function quickRuleModalBodyHTML(){
+  return`<p class="chart-sub" style="margin:-4px 0 14px">Khi nhập nhanh, nếu nội dung khớp với 1 từ khóa bên dưới, giao dịch sẽ tự nhận đúng loại (Thu/Chi) và danh mục tương ứng — kể cả khi bạn không gõ chữ Thu/Chi trong dòng nhập.</p>
+  <div class="task-modal-field"><label>Thêm quy tắc mới</label>
+    <div class="category-add-row" style="align-items:stretch">
+      <select id="newRuleType" style="width:82px;flex:0 0 auto">${quickRuleTypeOptions('expense')}</select>
+      <input type="text" id="newRuleKeyword" placeholder="Từ khóa, vd: netflix, ytb">
+      <select id="newRuleCategory" style="width:150px;flex:0 0 auto">${manualCategoryOptions('expense')}</select>
+      <button class="primary-button" id="addRuleBtn" style="height:41px;padding:0 14px;white-space:nowrap">＋ Thêm</button>
+    </div>
+  </div>
+  <div class="field-error" id="ruleError"></div>
+  <div class="category-manage-list">${quickRules.length?quickRules.map(quickRuleRowHTML).join(''):'<div class="chart-empty" style="min-height:60px">Chưa có quy tắc nào</div>'}</div>`;
+}
+function renderQuickRuleModal(){
+  const body=$('#quickRuleModalBody');
+  if(!body)return;
+  body.innerHTML=quickRuleModalBodyHTML();
+  bindQuickRuleModal();
+}
+function bindQuickRuleModal(){
+  const errEl=$('#ruleError');
+  $('#newRuleType').onchange=e=>{$('#newRuleCategory').innerHTML=manualCategoryOptions(e.target.value)};
+  $('#addRuleBtn').onclick=()=>{
+    const type=$('#newRuleType').value==='income'?'income':'expense';
+    const keyword=$('#newRuleKeyword').value.trim();
+    const category=$('#newRuleCategory').value;
+    if(errEl)errEl.textContent='';
+    if(!keyword){if(errEl)errEl.textContent='Vui lòng nhập ít nhất 1 từ khóa';return}
+    const newRule={id:uid(),type,category,keyword};
+    quickRules=[...quickRules,newRule];
+    saveQuickRulesLocal();
+    dbInsert('quick_rules',quickRuleInsertToDb(newRule));
+    notify('Đã thêm quy tắc phân loại');
+    renderQuickRuleModal();
+  };
+  $$('[data-rule-type]').forEach(el=>el.onchange=()=>{
+    const r=quickRules.find(x=>x.id===el.dataset.ruleType);
+    if(!r)return;
+    r.type=el.value==='income'?'income':'expense';
+    r.category=UNCATEGORIZED;
+    saveQuickRulesLocal();
+    dbUpdate('quick_rules',r.id,{type:r.type,category:r.category});
+    renderQuickRuleModal();
+  });
+  $$('[data-rule-keyword]').forEach(el=>el.onchange=()=>{
+    const r=quickRules.find(x=>x.id===el.dataset.ruleKeyword);
+    if(!r)return;
+    const val=el.value.trim();
+    if(!val){el.value=r.keyword;return}
+    r.keyword=val;
+    saveQuickRulesLocal();
+    dbUpdate('quick_rules',r.id,{keyword:r.keyword});
+  });
+  $$('[data-rule-category]').forEach(el=>el.onchange=()=>{
+    const r=quickRules.find(x=>x.id===el.dataset.ruleCategory);
+    if(!r)return;
+    r.category=el.value;
+    saveQuickRulesLocal();
+    dbUpdate('quick_rules',r.id,{category:r.category});
+  });
+  $$('[data-rule-delete]').forEach(el=>el.onclick=()=>{
+    const id=el.dataset.ruleDelete;
+    quickRules=quickRules.filter(x=>x.id!==id);
+    saveQuickRulesLocal();
+    dbDelete('quick_rules',id);
+    notify('Đã xóa quy tắc');
+    renderQuickRuleModal();
+  });
+}
 function manualCategoryOptions(type,selected){
-  if(type==='income')return '<option value="Thu nhập">Thu nhập</option>';
-  return rootCategories().map(root=>{
+  return rootCategories(type==='income'?'income':'expense').map(root=>{
     const children=childCategoriesOf(root.id);
     const rootOpt=`<option value="${esc(root.name)}" ${selected===root.name?'selected':''}>${esc(root.name)}${children.length?' (chung)':''}</option>`;
     if(!children.length)return rootOpt;
@@ -1702,9 +2118,9 @@ function manualCategoryOptions(type,selected){
   }).join('');
 }
 function txRowHTML(x,withDelete){
-  const editableCategory=withDelete&&x.type==='expense';
+  const editableCategory=withDelete;
   const categoryPart=editableCategory
-    ?`<select class="tx-category-select" data-edit-tx-category="${x.id}">${manualCategoryOptions('expense',x.category)}</select>`
+    ?`<select class="tx-category-select" data-edit-tx-category="${x.id}">${manualCategoryOptions(x.type,x.category)}</select>`
     :esc(x.category);
   return `<div class="row tx-row"><div class="row-icon">${x.type==='income'?'↓':'↑'}</div><div class="row-main"><b>${esc(x.title)}</b><small>${categoryPart} · ${x.currency}${x.date?' · '+formatShortDate(x.date):''}${x.note?' · '+esc(x.note):''}</small></div><strong class="amount ${x.type}">${x.type==='income'?'+':'−'}${money(x.amount,x.currency)}</strong>${withDelete?`<button class="row-delete" data-del-tx="${x.id}" title="Xóa giao dịch">×</button>`:''}</div>`;
 }
@@ -1720,7 +2136,7 @@ function renderOverview(){
     <article class="panel summary-card"><span>KIẾN THỨC</span><strong>${data.knowledge.length}</strong><small>Nội dung đã lưu</small></article>
   </div>
   <div class="dashboard-grid">
-    <article class="panel section-card"><h2>Giao dịch gần đây</h2>${data.transactions.length?data.transactions.slice(0,5).map(x=>txRowHTML(x,false)).join(''):'<div class="empty-state">Chưa có giao dịch nào</div>'}</article>
+    <article class="panel section-card"><h2>Giao dịch gần đây</h2>${data.transactions.length?sortByRealDateDesc(data.transactions).slice(0,5).map(x=>txRowHTML(x,false)).join(''):'<div class="empty-state">Chưa có giao dịch nào</div>'}</article>
     <article class="panel section-card"><h2>Kế hoạch hôm nay</h2>${pendingTasks.length?pendingTasks.slice(0,6).map(t=>`<div class="row"><div class="row-icon">✓</div><div class="row-main"><b>${esc(t.title)}</b><small>${esc(formatDueDate(t.due))}</small></div></div>`).join(''):'<div class="empty-state">Không có việc nào đang chờ</div>'}</article>
   </div>`;
 }
@@ -2285,16 +2701,37 @@ function tripItemShare(p,b,mid){
 function tripItemSharesTotal(p,b){
   return tripItemParticipants(p,b).reduce((s,mid)=>s+tripItemShare(p,b,mid),0);
 }
-/* Đọc thông tin 1 lần đóng lại: hỗ trợ cả dữ liệu cũ (chỉ là số) lẫn dữ liệu mới {amount,date} */
-function tripRepaymentOf(b,mid){
+/* Đọc DANH SÁCH các lần đóng lại của 1 người cho 1 hạng mục — hỗ trợ nhiều lần đóng ở nhiều thời
+   điểm khác nhau. Tương thích ngược với dữ liệu cũ: số đơn thuần, hoặc {amount,date} đơn lẻ. */
+function tripRepaymentEntries(b,mid){
   const raw=b.repayments&&b.repayments[mid];
-  if(raw&&typeof raw==='object')return{amount:+raw.amount||0,date:raw.date||''};
-  return{amount:+raw||0,date:''};
+  if(Array.isArray(raw))return raw.map(e=>({id:(e&&e.id)||uid(),amount:+(e&&e.amount)||0,date:(e&&e.date)||''}));
+  if(raw&&typeof raw==='object')return(+raw.amount||raw.date)?[{id:uid(),amount:+raw.amount||0,date:raw.date||''}]:[];
+  if(raw)return[{id:uid(),amount:+raw||0,date:''}];
+  return[];
 }
-function tripSetRepayment(b,mid,patch){
+/* Tổng số tiền đã đóng lại (cộng dồn mọi lần đóng) */
+function tripRepaymentTotal(b,mid){
+  return tripRepaymentEntries(b,mid).reduce((s,e)=>s+e.amount,0);
+}
+function tripSaveRepaymentEntries(b,mid,entries){
   if(!b.repayments)b.repayments={};
-  const cur=tripRepaymentOf(b,mid);
-  b.repayments[mid]={amount:cur.amount,date:cur.date,...patch};
+  b.repayments[mid]=entries;
+}
+/* Thêm 1 lần đóng mới (mặc định hôm nay nếu chưa chọn ngày) */
+function tripAddRepaymentEntry(b,mid){
+  const entries=tripRepaymentEntries(b,mid);
+  entries.push({id:uid(),amount:0,date:new Date().toISOString().slice(0,10)});
+  tripSaveRepaymentEntries(b,mid,entries);
+}
+function tripUpdateRepaymentEntry(b,mid,entryId,patch){
+  const entries=tripRepaymentEntries(b,mid);
+  const e=entries.find(x=>x.id===entryId);
+  if(e)Object.assign(e,patch);
+  tripSaveRepaymentEntries(b,mid,entries);
+}
+function tripDeleteRepaymentEntry(b,mid,entryId){
+  tripSaveRepaymentEntries(b,mid,tripRepaymentEntries(b,mid).filter(x=>x.id!==entryId));
 }
 /* Tổng hợp cần đóng / đã đóng / đã chi hộ của từng thành viên, cộng dồn qua mọi hạng mục */
 function tripMemberBalances(p){
@@ -2310,7 +2747,7 @@ function tripMemberBalances(p){
       if(!row)return;
       const share=tripItemShare(p,b,mid);
       row.owe+=share;
-      row.paid+=(mid===b.paidBy)?share:tripRepaymentOf(b,mid).amount;
+      row.paid+=(mid===b.paidBy)?share:tripRepaymentTotal(b,mid);
     });
     if(b.paidBy&&map[b.paidBy])map[b.paidBy].fronted+=amount;
   });
@@ -2329,7 +2766,7 @@ function tripMemberDebts(p){
     participants.forEach(mid=>{
       if(mid===payerId)return;
       const share=tripItemShare(p,b,mid);
-      const paid=tripRepaymentOf(b,mid).amount;
+      const paid=tripRepaymentTotal(b,mid);
       const delta=share-paid;
       if(delta>0.5){
         if(!map[mid])map[mid]={};
@@ -2641,18 +3078,29 @@ function renderTripItemSplit(fund,p,b){
         <span class="trip-split-settled">Đã chi hộ toàn bộ ✓</span>
       </div>`;
     }
-    const rep=tripRepaymentOf(b,mid);
-    const delta=rep.amount-share;
+    const entries=tripRepaymentEntries(b,mid);
+    const paid=entries.reduce((s,e)=>s+e.amount,0);
+    const delta=paid-share;
     let statusClass='pending',statusText='Chưa đóng';
-    if(rep.amount>0&&delta>=0)statusClass='settled',statusText=delta>0?`Đã giải quyết ✓ (dư ${money(delta,fund.currency)})`:'Đã giải quyết xong ✓';
-    else if(rep.amount>0&&delta<0)statusClass='owing',statusText=`Còn thiếu ${money(Math.abs(delta),fund.currency)}`;
+    if(paid>0&&delta>=0)statusClass='settled',statusText=delta>0?`Đã giải quyết ✓ (dư ${money(delta,fund.currency)})`:'Đã giải quyết xong ✓';
+    else if(paid>0&&delta<0)statusClass='owing',statusText=`Còn thiếu ${money(Math.abs(delta),fund.currency)}`;
     else statusClass='owing',statusText=`Còn thiếu ${money(share,fund.currency)}`;
-    return `<div class="trip-split-row" data-trip-repay-row data-item="${b.id}" data-member="${mid}">
+    const countTxt=entries.length?`${entries.length} lần`:'—';
+    const entriesHTML=entries.map(e=>`<div class="trip-repay-entry" data-trip-repay-entry data-item="${b.id}" data-member="${mid}" data-entry="${e.id}">
+        <input type="number" min="0" data-trip-repay-amount placeholder="Số tiền" value="${e.amount||''}">
+        <input type="date" data-trip-repay-date value="${esc(e.date)}">
+        <button type="button" class="row-delete" data-trip-repay-del title="Xóa lần đóng này">×</button>
+      </div>`).join('');
+    return `<div class="trip-split-row" data-item="${b.id}" data-member="${mid}">
       <span>${esc(m.name||'Chưa đặt tên')}</span>
       <span>${shareCell}</span>
-      <input type="number" data-trip-repay-amount value="${rep.amount}">
-      <input type="date" data-trip-repay-date value="${esc(rep.date)}">
+      <span>${money(paid,fund.currency)}</span>
+      <span>${countTxt}</span>
       <span class="trip-split-status ${statusClass}">${statusText}</span>
+    </div>
+    <div class="trip-repay-entries">
+      ${entriesHTML}
+      <button type="button" class="trip-repay-add" data-trip-repay-add data-item="${b.id}" data-member="${mid}">＋ Thêm lần đóng</button>
     </div>`;
   }).join(''):'';
   return `<div class="trip-split-panel">
@@ -2661,7 +3109,7 @@ function renderTripItemSplit(fund,p,b){
     ${modeToggleHTML}
     ${noteHTML}
     ${rowsHTML?`<div class="trip-split-table">
-      <div class="trip-split-row trip-split-headrow"><span>Thành viên</span><span>Cần đóng</span><span>Đã đóng</span><span>Ngày đóng</span><span>Trạng thái</span></div>
+      <div class="trip-split-row trip-split-headrow"><span>Thành viên</span><span>Cần đóng</span><span>Đã đóng</span><span>Số lần</span><span>Trạng thái</span></div>
       ${rowsHTML}
     </div>`:''}
   </div>`;
@@ -3506,23 +3954,38 @@ function bindTripTabContent(fund,p){
       saveTripPlan(p);
       rerenderTripTab(fund,p);
     });
-    $$('[data-trip-repay-row]').forEach(row=>{
+    $$('[data-trip-repay-add]').forEach(btn=>btn.onclick=()=>{
+      const b=p.budgetItems.find(x=>x.id===btn.dataset.item);
+      if(!b)return;
+      tripAddRepaymentEntry(b,btn.dataset.member);
+      saveTripPlan(p);
+      rerenderTripTab(fund,p);
+    });
+    $$('[data-trip-repay-entry]').forEach(row=>{
       const amountInp=$('[data-trip-repay-amount]',row),dateInp=$('[data-trip-repay-date]',row);
+      const delBtn=$('[data-trip-repay-del]',row);
       if(amountInp)amountInp.onchange=()=>{
         const b=p.budgetItems.find(x=>x.id===row.dataset.item);
         if(!b)return;
-        const cur=tripRepaymentOf(b,row.dataset.member);
         const patch={amount:+amountInp.value||0};
-        // Nếu vừa nhập số tiền mà chưa có ngày, tự điền hôm nay cho tiện
-        if(patch.amount>0&&!cur.date)patch.date=new Date().toISOString().slice(0,10);
-        tripSetRepayment(b,row.dataset.member,patch);
+        // Nếu vừa nhập số tiền mà chưa có ngày cho lần đóng này, tự điền hôm nay cho tiện
+        const cur=tripRepaymentEntries(b,row.dataset.member).find(e=>e.id===row.dataset.entry);
+        if(patch.amount>0&&cur&&!cur.date)patch.date=new Date().toISOString().slice(0,10);
+        tripUpdateRepaymentEntry(b,row.dataset.member,row.dataset.entry,patch);
         saveTripPlan(p);
         rerenderTripTab(fund,p);
       };
       if(dateInp)dateInp.onchange=()=>{
         const b=p.budgetItems.find(x=>x.id===row.dataset.item);
         if(!b)return;
-        tripSetRepayment(b,row.dataset.member,{date:dateInp.value});
+        tripUpdateRepaymentEntry(b,row.dataset.member,row.dataset.entry,{date:dateInp.value});
+        saveTripPlan(p);
+        rerenderTripTab(fund,p);
+      };
+      if(delBtn)delBtn.onclick=()=>{
+        const b=p.budgetItems.find(x=>x.id===row.dataset.item);
+        if(!b)return;
+        tripDeleteRepaymentEntry(b,row.dataset.member,row.dataset.entry);
         saveTripPlan(p);
         rerenderTripTab(fund,p);
       };
@@ -3807,6 +4270,10 @@ function bind(){
       renderCategoryModal();
       $('#categoryModal').classList.add('open');
     };
+    $('#openQuickRuleModal').onclick=()=>{
+      renderQuickRuleModal();
+      $('#quickRuleModal').classList.add('open');
+    };
     const input=$('#quickInput');
     input.oninput=()=>{
       const items=parseQuick(input.value);
@@ -3877,6 +4344,7 @@ function bind(){
       $('#chartToday').onclick=()=>{ui.chartRefDate=new Date();render()};
       if($('#chartMetricTabs'))$$('#chartMetricTabs button').forEach(b=>b.onclick=()=>{ui.chartMetric=b.dataset.metric;render()});
       $$('.chart-catmode-tabs button').forEach(b=>b.onclick=()=>{ui.chartCatMode=b.dataset.catmode;render()});
+      $$('.chart-donuttype-tabs button').forEach(b=>b.onclick=()=>{ui.donutType=b.dataset.donuttype;render()});
       $$('[data-cat-toggle]').forEach(el=>el.onclick=()=>{
         const id=el.dataset.catToggle;
         if(ui.expandedParentCats.has(id))ui.expandedParentCats.delete(id);else ui.expandedParentCats.add(id);
@@ -4128,6 +4596,7 @@ if($('#closeTxModal'))$('#closeTxModal').onclick=()=>$('#txModal').classList.rem
 if($('#closeRecurModal'))$('#closeRecurModal').onclick=()=>$('#recurModal').classList.remove('open');
 if($('#closeFundModal'))$('#closeFundModal').onclick=()=>$('#fundModal').classList.remove('open');
 if($('#closeCategoryModal'))$('#closeCategoryModal').onclick=()=>$('#categoryModal').classList.remove('open');
+if($('#closeQuickRuleModal'))$('#closeQuickRuleModal').onclick=()=>$('#quickRuleModal').classList.remove('open');
 if($('#closeCategoryDetailModal'))$('#closeCategoryDetailModal').onclick=()=>closeCategoryDetail();
 if($('#closeNoteModal'))$('#closeNoteModal').onclick=()=>$('#noteModal').classList.remove('open');
 if($('#closeKnowledgeModal'))$('#closeKnowledgeModal').onclick=()=>$('#knowledgeModal').classList.remove('open');
@@ -4138,7 +4607,7 @@ if($('#knowledgeModalBody'))$('#knowledgeModalBody').innerHTML=knowledgeEditor()
 /* ===================== SAO LƯU / PHỤC HỒI / ĐẶT LẠI ===================== */
 function exportData(){
   try{
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const blob=new Blob([JSON.stringify({...data,quickRules},null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
@@ -4166,6 +4635,8 @@ function importData(file){
       merged.knowledge=merged.knowledge.map(x=>({...x,id:x.id||uid()}));
       // funds/fundTransactions đã được gán id ổn định (và liên kết đúng fundId) ngay trong withDefaults ở trên
       data=merged;
+      quickRules=(Array.isArray(parsed.quickRules)?parsed.quickRules:[]).filter(r=>r&&typeof r.keyword==='string'&&r.keyword.trim()).map(r=>({id:r.id||uid(),type:r.type==='income'?'income':'expense',category:typeof r.category==='string'&&r.category?r.category:UNCATEGORIZED,keyword:r.keyword.trim()}));
+      saveQuickRulesLocal();
       notify('Đang phục hồi dữ liệu...');
       await resetAllTables();
       await pushAllToDb();
@@ -4194,6 +4665,8 @@ if($('#enablePushBtn'))$('#enablePushBtn').onclick=()=>subscribeToPushReminders(
 if($('#resetBtn'))$('#resetBtn').onclick=async()=>{
   if(!confirm('Xóa toàn bộ dữ liệu trên máy và máy chủ? Hành động không thể hoàn tác.'))return;
   data=structuredClone(seed);
+  quickRules=[];
+  saveQuickRulesLocal();
   notify('Đang đặt lại dữ liệu...');
   await resetAllTables();
   await pushAllToDb();
@@ -4233,6 +4706,7 @@ setInterval(async()=>{
 },30*60*1000);
 (async()=>{
   await loadFromSupabase();
+  await loadQuickRulesFromDb();
   await processRecurringExpenses();
   restoreLastView();
   render();
